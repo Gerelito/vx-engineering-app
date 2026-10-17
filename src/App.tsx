@@ -3,7 +3,6 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import { Navbar } from './components/Navbar';
 import { ClientesList } from './components/modulo1/ClientesList';
 import { VehiculosList } from './components/modulo1/VehiculosList';
-import { AuditoriaView } from './components/modulo1/AuditoriaView';
 import { ClienteModal } from './components/modulo1/ClienteModal';
 import { VehiculoModal } from './components/modulo1/VehiculoModal';
 import { CambioPropietarioModal } from './components/modulo1/CambioPropietarioModal';
@@ -73,6 +72,7 @@ import { CajaView } from './components/modulo5/CajaView';
 import { VerificacionPublica } from './components/modulo7/VerificacionPublica';
 import { DocumentoEnvioModal } from './components/modulo7/DocumentoEnvioModal';
 import { BusquedaGlobal } from './components/modulo8/BusquedaGlobal';
+import { AuditoriaPantalla } from './components/modulo9/AuditoriaPantalla';
 import { HistorialVehiculoModal } from './components/modulo8/HistorialVehiculoModal';
 import { FichaClienteModal } from './components/modulo8/FichaClienteModal';
 import { descargarBlob } from './lib/envios';
@@ -82,7 +82,7 @@ import { ControlCalidadModal } from './components/modulo6/ControlCalidadModal';
 import { ActaEntregaModal } from './components/modulo6/ActaEntregaModal';
 import { CancelacionModal } from './components/modulo6/CancelacionModal';
 import { PagosOrdenModal } from './components/modulo5/PagosOrdenModal';
-import { collection, doc, onSnapshot, onSnapshotsInSync } from 'firebase/firestore';
+import { collection, doc, limit, onSnapshot, onSnapshotsInSync, orderBy, query } from 'firebase/firestore';
 import { CheckCircle2, ShieldCheck, AlertCircle, X, Loader2, ClipboardList, Wrench } from 'lucide-react';
 
 function TallerAppContent() {
@@ -333,8 +333,10 @@ function TallerAppContent() {
     );
 
     // 4. Auditoría en tiempo real
+    // Solo el último registro: sirve para el indicador de sincronización sin leer toda la colección
+    // (la pantalla de Auditoría carga de 50 en 50).
     const unsubAuditoria = onSnapshot(
-      collection(db, 'auditoria'),
+      query(collection(db, 'auditoria'), orderBy('fecha', 'desc'), limit(1)),
       { includeMetadataChanges: true },
       (snapshot) => {
         const lista: AuditoriaEvento[] = snapshot.docs.map((d) => {
@@ -940,7 +942,7 @@ function TallerAppContent() {
         )}
 
         {vistaActiva === 'auditoria' && (
-          <AuditoriaView eventos={auditoriaEventos} />
+          <AuditoriaPantalla ordenes={ordenes} />
         )}
 
       </main>

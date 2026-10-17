@@ -476,13 +476,17 @@ export interface AuditoriaEvento {
     | 'plantillas'
     | 'pagos'
     | 'contactos'
-    | 'cajas';
+    | 'cajas'
+    | 'verificaciones'
+    | string;
   entidadId: string;
   antes: Record<string, any> | null;
   despues: Record<string, any> | null;
   usuarioUid: string;
   usuarioEmail: string;
   usuarioNombre: string;
+  sensible?: boolean; // Módulo 9: anulaciones, descuentos, cambios de precio, entregas con saldo, cancelaciones...
+  dispositivo?: string; // Módulo 9: navegador y sistema resumidos
   fecha?: any; // Firestore serverTimestamp
   fechaLocalStr?: string; // Formato legible para visualización en UI
 }

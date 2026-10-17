@@ -127,10 +127,12 @@ service cloud.firestore {
       allow read: if isDueno();
       allow create: if isDueno() &&
         contadorId == 'ordenes' &&
-        request.resource.data.ultimo == 1;
+        request.resource.data.ultimo == 1 &&
+        hasValidAudit('contadores', contadorId);
       allow update: if isDueno() &&
         contadorId == 'ordenes' &&
-        request.resource.data.ultimo == resource.data.ultimo + 1;
+        request.resource.data.ultimo == resource.data.ultimo + 1 &&
+        hasValidAudit('contadores', contadorId);
       allow delete: if false;
     }
 
@@ -166,6 +168,7 @@ service cloud.firestore {
     // Auditoría inmutable obligatoria:
     // Solo lectura por dueños
     // Solo creación en el mismo batch con datos verificados: UID, server timestamp (request.time), email y tipos string
+    // (Módulo 9: también 'sensible' booleano y 'dispositivo' de texto cuando vienen)
     // Modificación y borrado absolutamente prohibidos
     match /auditoria/{auditoriaId} {
       allow read: if isDueno();
@@ -181,7 +184,9 @@ service cloud.firestore {
         request.resource.data.accion is string &&
         request.resource.data.accion.size() > 0 &&
         request.resource.data.entidad is string &&
-        request.resource.data.entidad.size() > 0;
+        request.resource.data.entidad.size() > 0 &&
+        (!('sensible' in request.resource.data) || request.resource.data.sensible is bool) &&
+        (!('dispositivo' in request.resource.data) || request.resource.data.dispositivo is string);
       allow update, delete: if false;
     }
 

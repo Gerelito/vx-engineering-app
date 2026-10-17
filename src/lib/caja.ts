@@ -22,7 +22,7 @@ import {
   WriteBatch,
 } from 'firebase/firestore';
 import { db } from './firebase';
-import { limpiarUndefined } from './storage';
+import { datosAuditoria, limpiarUndefined } from './storage';
 import {
   CierreCaja,
   ContactoCliente,
@@ -157,12 +157,14 @@ export function escribirAuditoria(
   const ref = doc(collection(db, 'auditoria'));
   (w as any).set(
     ref,
-    limpiarUndefined({
-      ...datos,
-      sensible: datos.sensible || false,
-      ...datosUsuario(dueno),
-      fecha: serverTimestamp(),
-    })
+    limpiarUndefined(
+      datosAuditoria({
+        ...datos,
+        sensible: datos.sensible || false,
+        ...datosUsuario(dueno),
+        fecha: serverTimestamp(),
+      })
+    )
   );
   return ref.id;
 }

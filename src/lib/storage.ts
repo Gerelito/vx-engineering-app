@@ -144,6 +144,38 @@ export function formatearTelefonoBolivia(tel: string): string {
  * Timestamp de Firestore u objeto {seconds}) a milisegundos. Devuelve null si no es válida
  * (por ejemplo, un serverTimestamp todavía pendiente).
  */
+// -------------------------------------------------------------
+// MÓDULO 9: datos comunes de cada registro de auditoría
+// -------------------------------------------------------------
+/** Navegador y sistema resumidos, p. ej. "Chrome 130 · Android 14 · móvil". */
+export function resumenDispositivo(): string {
+  if (typeof navigator === 'undefined') return 'desconocido';
+  const ua = navigator.userAgent || '';
+  const nav =
+    (/Edg\/(\d+)/.exec(ua) && `Edge ${/Edg\/(\d+)/.exec(ua)![1]}`) ||
+    (/OPR\/(\d+)/.exec(ua) && `Opera ${/OPR\/(\d+)/.exec(ua)![1]}`) ||
+    (/SamsungBrowser\/(\d+)/.exec(ua) && `Samsung Internet ${/SamsungBrowser\/(\d+)/.exec(ua)![1]}`) ||
+    (/(?:Chrome|CriOS)\/(\d+)/.exec(ua) && `Chrome ${/(?:Chrome|CriOS)\/(\d+)/.exec(ua)![1]}`) ||
+    (/(?:Firefox|FxiOS)\/(\d+)/.exec(ua) && `Firefox ${/(?:Firefox|FxiOS)\/(\d+)/.exec(ua)![1]}`) ||
+    (/Version\/(\d+).*Safari/.exec(ua) && `Safari ${/Version\/(\d+).*Safari/.exec(ua)![1]}`) ||
+    'Navegador';
+  const so =
+    (/Android ([\d.]+)/.exec(ua) && `Android ${/Android ([\d.]+)/.exec(ua)![1].split('.')[0]}`) ||
+    (/(?:iPhone|iPad).*OS (\d+)/.exec(ua) && `iOS ${/(?:iPhone|iPad).*OS (\d+)/.exec(ua)![1]}`) ||
+    (/Windows NT/.test(ua) && 'Windows') ||
+    (/Mac OS X/.test(ua) && 'macOS') ||
+    (/CrOS/.test(ua) && 'ChromeOS') ||
+    (/Linux/.test(ua) && 'Linux') ||
+    'Sistema';
+  const movil = /Mobi|Android|iPhone|iPad/.test(ua);
+  return `${nav} · ${so}${movil ? ' · móvil' : ''}`;
+}
+
+/** Completa un registro de auditoría con "sensible" (por defecto false) y "dispositivo". */
+export function datosAuditoria<T extends Record<string, any>>(d: T, sensible?: boolean): T & { sensible: boolean; dispositivo: string } {
+  return { ...d, sensible: d.sensible ?? sensible ?? false, dispositivo: resumenDispositivo() };
+}
+
 export function aMilisegundos(fecha: any): number | null {
   if (fecha === null || fecha === undefined || fecha === '') return null;
   let ms: number;
@@ -375,7 +407,7 @@ export async function actualizarListaDuenos(
     fecha: serverTimestamp(),
   };
 
-  batch.set(auditRef, limpiarUndefined(auditData));
+  batch.set(auditRef, limpiarUndefined(datosAuditoria(auditData, true)));
 
   await batch.commit();
 }
@@ -465,7 +497,7 @@ export async function guardarClienteFirestore(
     fecha: serverTimestamp(),
   };
 
-  batch.set(auditRef, limpiarUndefined(auditData));
+  batch.set(auditRef, limpiarUndefined(datosAuditoria(auditData)));
 
   await batch.commit();
   return clienteFinal;
@@ -501,7 +533,7 @@ export async function desactivarClienteFirestore(
     fecha: serverTimestamp(),
   };
 
-  batch.set(auditRef, limpiarUndefined(auditData));
+  batch.set(auditRef, limpiarUndefined(datosAuditoria(auditData)));
 
   await batch.commit();
 }
@@ -590,7 +622,7 @@ export async function guardarConsentimientoConArchivo(
     usuarioNombre: duenoActual.displayName || duenoActual.email,
     fecha: serverTimestamp(),
   };
-  batch.set(auditArchivoRef, limpiarUndefined(auditArchivoData));
+  batch.set(auditArchivoRef, limpiarUndefined(datosAuditoria(auditArchivoData)));
 
   const auditClienteData: Omit<AuditoriaEvento, 'id'> = {
     modulo: 'Clientes',
@@ -611,7 +643,7 @@ export async function guardarConsentimientoConArchivo(
     usuarioNombre: duenoActual.displayName || duenoActual.email,
     fecha: serverTimestamp(),
   };
-  batch.set(auditClienteRef, limpiarUndefined(auditClienteData));
+  batch.set(auditClienteRef, limpiarUndefined(datosAuditoria(auditClienteData)));
 
   await batch.commit();
 }
@@ -717,7 +749,7 @@ export async function guardarVehiculoFirestore(
     fecha: serverTimestamp(),
   };
 
-  batch.set(auditRef, limpiarUndefined(auditData));
+  batch.set(auditRef, limpiarUndefined(datosAuditoria(auditData)));
 
   await batch.commit();
   return vehiculoFinal;
@@ -787,7 +819,7 @@ export async function cambiarPropietarioFirestore(
     fecha: serverTimestamp(),
   };
 
-  batch.set(auditRef, limpiarUndefined(auditData));
+  batch.set(auditRef, limpiarUndefined(datosAuditoria(auditData)));
 
   await batch.commit();
   return vehiculoActualizado;
@@ -823,7 +855,7 @@ export async function desactivarVehiculoFirestore(
     fecha: serverTimestamp(),
   };
 
-  batch.set(auditRef, limpiarUndefined(auditData));
+  batch.set(auditRef, limpiarUndefined(datosAuditoria(auditData)));
 
   await batch.commit();
 }
@@ -861,7 +893,7 @@ export async function guardarConfiguracionTaller(
     fecha: serverTimestamp(),
   };
 
-  batch.set(auditRef, limpiarUndefined(auditData));
+  batch.set(auditRef, limpiarUndefined(datosAuditoria(auditData)));
 
   await batch.commit();
 }
@@ -884,7 +916,7 @@ export function generarCodigoVerificacionQr(): string {
  * mediante transacción sobre /contadores/ordenes.
  * Si no hay conexión, lanza error para activar folio provisional 'PEND-xxxx'.
  */
-export async function asignarFolioCorrelativoOficial(): Promise<{
+export async function asignarFolioCorrelativoOficial(dueno: DuenoUsuario): Promise<{
   folio: string;
   numero: number;
 }> {
@@ -892,14 +924,29 @@ export async function asignarFolioCorrelativoOficial(): Promise<{
 
   const nuevoNumero = await runTransaction(db, async (transaction) => {
     const snap = await transaction.get(contadorRef);
-    let siguiente = 1;
-    if (snap.exists()) {
-      const data = snap.data();
-      siguiente = (data.ultimo || 0) + 1;
-      transaction.update(contadorRef, { ultimo: siguiente });
-    } else {
-      transaction.set(contadorRef, { ultimo: 1 });
-    }
+    const anterior = snap.exists() ? snap.data().ultimo || 0 : 0;
+    const siguiente = anterior + 1;
+    // Módulo 9: el contador de folios también deja su registro de auditoría
+    const auditRef = doc(collection(db, 'auditoria'));
+    transaction.set(
+      auditRef,
+      limpiarUndefined(
+        datosAuditoria({
+          modulo: 'Recepción',
+          accion: 'Folio asignado',
+          entidad: 'contadores',
+          entidadId: 'ordenes',
+          antes: { ultimo: anterior },
+          despues: { ultimo: siguiente, folio: `OS-${String(siguiente).padStart(6, '0')}` },
+          usuarioUid: dueno.uid,
+          usuarioEmail: dueno.email.toLowerCase(),
+          usuarioNombre: dueno.displayName || dueno.email,
+          fecha: serverTimestamp(),
+        })
+      )
+    );
+    if (snap.exists()) transaction.update(contadorRef, { ultimo: siguiente, auditoriaId: auditRef.id });
+    else transaction.set(contadorRef, { ultimo: 1, auditoriaId: auditRef.id });
     return siguiente;
   });
 
@@ -961,7 +1008,7 @@ export async function crearOrdenRecepcionFirestore(
   // Intentar obtener folio oficial mediante transacción si estamos en línea
   if (navigator.onLine) {
     try {
-      const res = await asignarFolioCorrelativoOficial();
+      const res = await asignarFolioCorrelativoOficial(duenoActual);
       folio = res.folio;
       numeroFolio = res.numero;
       sincronizacionFolio = 'confirmado';
@@ -1086,7 +1133,7 @@ export async function crearOrdenRecepcionFirestore(
       usuarioNombre: duenoActual.displayName || duenoActual.email,
       fecha: serverTimestamp(),
     };
-    batch.set(auditFotoRef, limpiarUndefined(auditFotoData));
+    batch.set(auditFotoRef, limpiarUndefined(datosAuditoria(auditFotoData)));
   }
 
   // Actualizar último kilometraje en el vehículo si el nuevo es mayor
@@ -1115,7 +1162,7 @@ export async function crearOrdenRecepcionFirestore(
       usuarioNombre: duenoActual.displayName || duenoActual.email,
       fecha: serverTimestamp(),
     };
-    batch.set(auditVehRef, limpiarUndefined(auditVehData));
+    batch.set(auditVehRef, limpiarUndefined(datosAuditoria(auditVehData)));
   }
 
   // Auditoría principal para la creación de la orden
@@ -1138,7 +1185,7 @@ export async function crearOrdenRecepcionFirestore(
     usuarioNombre: duenoActual.displayName || duenoActual.email,
     fecha: serverTimestamp(),
   };
-  batch.set(auditOrdenRef, limpiarUndefined(auditOrdenData));
+  batch.set(auditOrdenRef, limpiarUndefined(datosAuditoria(auditOrdenData)));
   sincronizarVerificacion(batch, ordenDocRaw, 'Recibido', auditOrdenRef.id);
 
   await batch.commit();
@@ -1160,7 +1207,7 @@ export async function sincronizarOrdenesPendientes(
     if (ord.sincronizacionFolio !== 'pendiente') continue;
 
     try {
-      const res = await asignarFolioCorrelativoOficial();
+      const res = await asignarFolioCorrelativoOficial(duenoActual);
       const auditRef = doc(collection(db, 'auditoria'));
       const batch = writeBatch(db);
       const ordRef = doc(db, 'ordenes', ord.id);
@@ -1188,7 +1235,7 @@ export async function sincronizarOrdenesPendientes(
         usuarioNombre: duenoActual.displayName || duenoActual.email,
         fecha: serverTimestamp(),
       };
-      batch.set(auditRef, limpiarUndefined(auditData));
+      batch.set(auditRef, limpiarUndefined(datosAuditoria(auditData)));
       sincronizarVerificacion(batch, { ...ord, folio: res.folio }, ord.estado, auditRef.id);
 
       await batch.commit();
@@ -1264,7 +1311,7 @@ export async function subirFirmaOrdenFirestore(
     usuarioNombre: duenoActual.displayName || duenoActual.email,
     fecha: serverTimestamp(),
   };
-  batch.set(auditFotoRef, limpiarUndefined(auditFotoData));
+  batch.set(auditFotoRef, limpiarUndefined(datosAuditoria(auditFotoData)));
 
   // Auditoría orden
   const auditOrdenData: Omit<AuditoriaEvento, 'id'> = {
@@ -1279,7 +1326,7 @@ export async function subirFirmaOrdenFirestore(
     usuarioNombre: duenoActual.displayName || duenoActual.email,
     fecha: serverTimestamp(),
   };
-  batch.set(auditOrdenRef, limpiarUndefined(auditOrdenData));
+  batch.set(auditOrdenRef, limpiarUndefined(datosAuditoria(auditOrdenData)));
 
   await batch.commit();
 }
@@ -1345,7 +1392,7 @@ export async function actualizarEstadoOrdenFirestore(
     usuarioNombre: duenoActual.displayName || duenoActual.email,
     fecha: serverTimestamp(),
   };
-  batch.set(auditRef, limpiarUndefined(auditData));
+  batch.set(auditRef, limpiarUndefined(datosAuditoria(auditData)));
   sincronizarVerificacion(batch, orden, nuevoEstado, auditRef.id);
 
   await batch.commit();
@@ -1387,7 +1434,7 @@ export async function asignarBahiaYResponsableFirestore(
     usuarioNombre: duenoActual.displayName || duenoActual.email,
     fecha: serverTimestamp(),
   };
-  batch.set(auditRef, limpiarUndefined(auditData));
+  batch.set(auditRef, limpiarUndefined(datosAuditoria(auditData)));
 
   await batch.commit();
 }
@@ -1432,7 +1479,7 @@ export async function registrarAprobacionClienteFirestore(
     usuarioNombre: duenoActual.displayName || duenoActual.email,
     fecha: serverTimestamp(),
   };
-  batch.set(auditRef, limpiarUndefined(auditData));
+  batch.set(auditRef, limpiarUndefined(datosAuditoria(auditData)));
 
   await batch.commit();
 }
@@ -1503,7 +1550,7 @@ export async function guardarTareaOrdenFirestore(
     usuarioNombre: duenoActual.displayName || duenoActual.email,
     fecha: serverTimestamp(),
   };
-  batch.set(auditRef, limpiarUndefined(auditData));
+  batch.set(auditRef, limpiarUndefined(datosAuditoria(auditData)));
 
   await batch.commit();
   return tareaResult;
@@ -1601,7 +1648,7 @@ export async function cronometroTareaFirestore(
     usuarioNombre: duenoActual.displayName || duenoActual.email,
     fecha: serverTimestamp(),
   };
-  batch.set(auditRef, limpiarUndefined(auditData));
+  batch.set(auditRef, limpiarUndefined(datosAuditoria(auditData)));
 
   await batch.commit();
 }
@@ -1650,7 +1697,7 @@ export async function guardarDiagnosticoTecnicoFirestore(
     usuarioNombre: duenoActual.displayName || duenoActual.email,
     fecha: serverTimestamp(),
   };
-  batch.set(auditRef, limpiarUndefined(auditData));
+  batch.set(auditRef, limpiarUndefined(datosAuditoria(auditData)));
 
   await batch.commit();
 }
@@ -1711,7 +1758,7 @@ export async function subirFotoDiagnosticoFirestore(
     usuarioNombre: duenoActual.displayName || duenoActual.email,
     fecha: serverTimestamp(),
   };
-  batch.set(auditFotoRef, limpiarUndefined(auditFotoData));
+  batch.set(auditFotoRef, limpiarUndefined(datosAuditoria(auditFotoData)));
 
   const auditOrdenData: Omit<AuditoriaEvento, 'id'> = {
     modulo: 'Taller',
@@ -1725,7 +1772,7 @@ export async function subirFotoDiagnosticoFirestore(
     usuarioNombre: duenoActual.displayName || duenoActual.email,
     fecha: serverTimestamp(),
   };
-  batch.set(auditOrdenRef, limpiarUndefined(auditOrdenData));
+  batch.set(auditOrdenRef, limpiarUndefined(datosAuditoria(auditOrdenData)));
 
   await batch.commit();
   return fotoDoc;
@@ -1787,7 +1834,7 @@ export async function registrarTrabajoAdicionalFirestore(
       usuarioNombre: duenoActual.displayName || duenoActual.email,
       fecha: serverTimestamp(),
     };
-    batch.set(auditFotoRef, limpiarUndefined(auditFotoData));
+    batch.set(auditFotoRef, limpiarUndefined(datosAuditoria(auditFotoData)));
   }
 
   const nuevoHallazgo: HallazgoAdicional = {
@@ -1850,7 +1897,7 @@ export async function registrarTrabajoAdicionalFirestore(
     usuarioNombre: duenoActual.displayName || duenoActual.email,
     fecha: serverTimestamp(),
   };
-  batch.set(auditOrdenRef, limpiarUndefined(auditOrdenData));
+  batch.set(auditOrdenRef, limpiarUndefined(datosAuditoria(auditOrdenData)));
   if (updatePayload.estado && updatePayload.estado !== orden.estado) {
     sincronizarVerificacion(batch, orden, updatePayload.estado, auditOrdenRef.id);
   }
@@ -2009,7 +2056,7 @@ export async function guardarCotizacionFirestore(
   batch.update(ordenRef, limpiarUndefined(ordenUpdate));
   batch.set(
     auditOrdenRef,
-    limpiarUndefined({
+    limpiarUndefined(datosAuditoria({
       modulo: 'Cotizaciones',
       accion: 'Presupuesto de orden actualizado',
       entidad: 'ordenes',
@@ -2027,13 +2074,19 @@ export async function guardarCotizacionFirestore(
       usuarioEmail: duenoActual.email.toLowerCase(),
       usuarioNombre: duenoActual.displayName || duenoActual.email,
       fecha: serverTimestamp(),
-    })
+    }))
   );
 
   // Auditoría atómica (acción sensible si incluye descuento)
   const huboDescuento =
     (cotizacionInput.descuentoTotalMontoBs || 0) > 0 ||
     cotizacionInput.items.some((i) => (i.descuentoMontoBs || 0) > 0);
+  // Módulo 9: cambio de precio respecto de la versión anterior = acción sensible
+  const versionAnterior = snapExistentes.docs
+    .map((d) => d.data() as CotizacionOrden)
+    .filter((c) => !!c.esComplementariaTrabajoAdicional === !!cotizacionInput.esComplementariaTrabajoAdicional)
+    .sort((a, b) => (b.versionNumero || 0) - (a.versionNumero || 0))[0];
+  const cambioPrecio = !!versionAnterior && (versionAnterior.totalBs ?? null) !== (totalCalculado ?? null);
   const accionAudit = huboDescuento
     ? 'Descuento Cotización'
     : siguienteVersionNumero > 1
@@ -2062,7 +2115,7 @@ export async function guardarCotizacionFirestore(
     usuarioNombre: duenoActual.displayName || duenoActual.email,
     fecha: serverTimestamp(),
   };
-  batch.set(auditRef, limpiarUndefined(auditData));
+  batch.set(auditRef, limpiarUndefined(datosAuditoria(auditData, huboDescuento || cambioPrecio)));
   if (!cotizacionInput.esComplementariaTrabajoAdicional) {
     sincronizarVerificacion(batch, orden, orden.estado, auditOrdenRef.id, { version: siguienteVersionNumero });
   }
@@ -2233,7 +2286,7 @@ export async function registrarAprobacionCotizacionFirestore(
     usuarioNombre: duenoActual.displayName || duenoActual.email,
     fecha: serverTimestamp(),
   };
-  batch.set(auditCotRef, limpiarUndefined(auditCotData));
+  batch.set(auditCotRef, limpiarUndefined(datosAuditoria(auditCotData)));
 
   // 4. Auditoría para orden
   const auditOrdData: Omit<AuditoriaEvento, 'id'> = {
@@ -2252,7 +2305,7 @@ export async function registrarAprobacionCotizacionFirestore(
     usuarioNombre: duenoActual.displayName || duenoActual.email,
     fecha: serverTimestamp(),
   };
-  batch.set(auditOrdRef, limpiarUndefined(auditOrdData));
+  batch.set(auditOrdRef, limpiarUndefined(datosAuditoria(auditOrdData)));
   sincronizarVerificacion(batch, orden, aprobacionData.nuevoEstadoOrden, auditOrdRef.id);
 
   await batch.commit();
@@ -2346,7 +2399,7 @@ export async function rechazarCotizacionFirestore(
     usuarioNombre: duenoActual.displayName || duenoActual.email,
     fecha: serverTimestamp(),
   };
-  batch.set(auditCotRef, limpiarUndefined(auditCotData));
+  batch.set(auditCotRef, limpiarUndefined(datosAuditoria(auditCotData)));
 
   // 4. Auditoría orden
   const auditOrdData: Omit<AuditoriaEvento, 'id'> = {
@@ -2361,7 +2414,7 @@ export async function rechazarCotizacionFirestore(
     usuarioNombre: duenoActual.displayName || duenoActual.email,
     fecha: serverTimestamp(),
   };
-  batch.set(auditOrdRef, limpiarUndefined(auditOrdData));
+  batch.set(auditOrdRef, limpiarUndefined(datosAuditoria(auditOrdData, true)));
   sincronizarVerificacion(batch, orden, 'Cancelada', auditOrdRef.id);
 
   await batch.commit();
@@ -2399,7 +2452,7 @@ export async function guardarPlantillaCotizacionFirestore(
     usuarioNombre: duenoActual.displayName || duenoActual.email,
     fecha: serverTimestamp(),
   };
-  batch.set(auditRef, limpiarUndefined(auditData));
+  batch.set(auditRef, limpiarUndefined(datosAuditoria(auditData)));
 
   await batch.commit();
 }
