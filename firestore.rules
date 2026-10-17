@@ -186,9 +186,31 @@ service cloud.firestore {
     }
 
     // Colección pública para verificación QR del cliente final (Módulo 7)
+    // Solo lectura de UN documento por su código (no se puede listar la colección).
+    // Solo datos públicos (claves cerradas). Cada escritura va con una auditoría nueva del mismo batch:
+    //  - entidad 'verificaciones' con entidadId == código (documento emitido, activar/desactivar), o
+    //  - entidad 'ordenes' de la orden cuyo codigoVerificacion es este código (cambio de estado).
+    function auditVerif() {
+      return getAfter(/databases/$(database)/documents/auditoria/$(request.resource.data.auditoriaId)).data;
+    }
     match /verificaciones/{codigo} {
-      allow read: if true;
-      allow create, update: if isDueno();
+      allow get: if true;
+      allow list: if false;
+      allow create, update: if isDueno() &&
+        codigo.size() >= 16 &&
+        request.resource.data.keys().hasOnly(['folio', 'clienteNombre', 'vehiculo', 'estadoCliente', 'pasoCliente', 'cancelada',
+          'activo', 'version', 'reemplazadoPor', 'documentos', 'tallerNombre', 'tallerTelefono', 'actualizado', 'auditoriaId']) &&
+        request.resource.data.vehiculo.keys().hasOnly(['marca', 'modelo', 'placa']) &&
+        request.resource.data.auditoriaId is string &&
+        request.resource.data.auditoriaId.size() > 0 &&
+        !exists(/databases/$(database)/documents/auditoria/$(request.resource.data.auditoriaId)) &&
+        existsAfter(/databases/$(database)/documents/auditoria/$(request.resource.data.auditoriaId)) &&
+        auditVerif().usuarioUid == request.auth.uid &&
+        (
+          (auditVerif().entidad == 'verificaciones' && auditVerif().entidadId == codigo) ||
+          (auditVerif().entidad == 'ordenes' &&
+            getAfter(/databases/$(database)/documents/ordenes/$(auditVerif().entidadId)).data.codigoVerificacion == codigo)
+        );
       allow delete: if false;
     }
 

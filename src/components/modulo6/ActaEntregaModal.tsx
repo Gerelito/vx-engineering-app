@@ -13,7 +13,7 @@ import {
 import { calcularFinanzasOrden, redondearBs } from '../../lib/caja';
 import { procesarArchivoAdjunto } from '../../lib/fileCompression';
 import { formatearFecha, formatearMonedaBs } from '../../lib/storage';
-import { AlertTriangle, Camera, CheckCircle2, FileSignature, KeyRound, Loader2, Printer, Wallet, X } from 'lucide-react';
+import { AlertTriangle, MessageCircle, Camera, CheckCircle2, FileSignature, KeyRound, Loader2, Printer, Wallet, X } from 'lucide-react';
 
 interface Props {
   orden: OrdenServicio;
@@ -22,6 +22,7 @@ interface Props {
   usuarioActual: DuenoUsuario;
   onClose: () => void;
   onAbrirPagos: (orden: OrdenServicio) => void;
+  onEnviar?: (orden: OrdenServicio) => void;
   onExito: (m: string) => void;
 }
 
@@ -33,7 +34,7 @@ const PARES_FOTOS: { salida: TipoFotoRecepcion; ingreso: TipoFotoRecepcion; text
   { salida: 'salida_tablero', ingreso: 'tablero_kilometraje', texto: 'Tablero / km' },
 ];
 
-export const ActaEntregaModal: React.FC<Props> = ({ orden, tipo, config, usuarioActual, onClose, onAbrirPagos, onExito }) => {
+export const ActaEntregaModal: React.FC<Props> = ({ orden, tipo, config, usuarioActual, onClose, onAbrirPagos, onEnviar, onExito }) => {
   const [fotos, setFotos] = useState<FotoOrden[]>([]);
   const [kmSalida, setKmSalida] = useState('');
   const [nombreRetira, setNombreRetira] = useState(orden.clienteNombre || '');
@@ -159,6 +160,11 @@ export const ActaEntregaModal: React.FC<Props> = ({ orden, tipo, config, usuario
             </div>
           </div>
           <div className="flex items-center gap-2">
+            {acta && onEnviar && (
+              <button onClick={() => onEnviar(orden)} className="inline-flex items-center gap-1 px-3 py-2 rounded-lg bg-green-600 text-white text-sm font-bold">
+                <MessageCircle className="w-4 h-4" /> PDF / WhatsApp
+              </button>
+            )}
             {acta && (
               <button onClick={() => window.print()} className="inline-flex items-center gap-1 px-3 py-2 rounded-lg bg-amber-500 text-slate-900 text-sm font-bold">
                 <Printer className="w-4 h-4" /> Imprimir

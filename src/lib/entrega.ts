@@ -14,6 +14,7 @@ import {
 import { db } from './firebase';
 import { limpiarUndefined, obtenerCotizacionesOrdenFirestore } from './storage';
 import { calcularFinanzasOrden, diaLaPaz, escribirAuditoria, redondearBs } from './caja';
+import { sincronizarVerificacion } from './verificacion';
 import {
   ActaEntrega,
   AvisoCliente,
@@ -225,6 +226,7 @@ export async function registrarControlCalidadFirestore(
       updatedAt: serverTimestamp(),
     })
   );
+  sincronizarVerificacion(batch, orden, nuevoEstado, auditId);
   await batch.commit();
 }
 
@@ -419,6 +421,7 @@ export async function entregarVehiculoFirestore(
     });
     update.auditoriaId = auditId;
     tx.update(ordenRef, limpiarUndefined(update));
+    sincronizarVerificacion(tx, orden, update.estado || orden.estado, auditId);
     return acta;
   });
 }
@@ -516,6 +519,7 @@ export async function iniciarCancelacionFirestore(
       updatedAt: serverTimestamp(),
     })
   );
+  sincronizarVerificacion(batch, orden, 'Cancelada', auditId);
   await batch.commit();
 }
 

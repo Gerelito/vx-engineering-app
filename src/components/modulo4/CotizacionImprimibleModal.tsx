@@ -1,7 +1,7 @@
 import React from 'react';
 import { CotizacionOrden, TallerConfig, OrdenServicio } from '../../types';
 import { formatearFecha, formatearMonedaBs, formatearTelefonoBolivia } from '../../lib/storage';
-import { Printer, X, Wrench, AlertCircle, FileText, Calendar, ShieldCheck, CheckCircle2 } from 'lucide-react';
+import { MessageCircle, Printer, X, Wrench, AlertCircle, FileText, Calendar, ShieldCheck, CheckCircle2 } from 'lucide-react';
 
 interface CotizacionImprimibleModalProps {
   cotizacion: CotizacionOrden | null;
@@ -9,6 +9,7 @@ interface CotizacionImprimibleModalProps {
   config: TallerConfig;
   isOpen: boolean;
   onClose: () => void;
+  onEnviar?: (cotizacion: CotizacionOrden) => void;
 }
 
 export const CotizacionImprimibleModal: React.FC<CotizacionImprimibleModalProps> = ({
@@ -17,6 +18,7 @@ export const CotizacionImprimibleModal: React.FC<CotizacionImprimibleModalProps>
   config,
   isOpen,
   onClose,
+  onEnviar,
 }) => {
   if (!isOpen || !cotizacion) return null;
 
@@ -39,6 +41,15 @@ export const CotizacionImprimibleModal: React.FC<CotizacionImprimibleModalProps>
           </div>
 
           <div className="flex items-center gap-2">
+            {onEnviar && orden && (
+              <button
+                onClick={() => onEnviar(cotizacion)}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-green-600 hover:bg-green-500 text-white font-bold rounded-lg text-xs transition-colors cursor-pointer"
+              >
+                <MessageCircle className="w-4 h-4" />
+                <span>PDF / WhatsApp</span>
+              </button>
+            )}
             <button
               onClick={handleImprimir}
               className="flex items-center gap-1.5 px-4 py-1.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-lg text-xs transition-colors cursor-pointer"

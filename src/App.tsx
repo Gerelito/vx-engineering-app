@@ -70,6 +70,9 @@ import {
 } from './types';
 import { db } from './lib/firebase';
 import { CajaView } from './components/modulo5/CajaView';
+import { VerificacionPublica } from './components/modulo7/VerificacionPublica';
+import { DocumentoEnvioModal } from './components/modulo7/DocumentoEnvioModal';
+import type { TipoDocumentoPublico } from './lib/verificacion';
 import { EntregasView } from './components/modulo6/EntregasView';
 import { ControlCalidadModal } from './components/modulo6/ControlCalidadModal';
 import { ActaEntregaModal } from './components/modulo6/ActaEntregaModal';
@@ -148,6 +151,8 @@ function TallerAppContent() {
   const [ordenControlCalidadId, setOrdenControlCalidadId] = useState<string | null>(null);
   const [actaAbierta, setActaAbierta] = useState<{ id: string; tipo: 'entrega' | 'devolucion' } | null>(null);
   const [ordenCancelacionId, setOrdenCancelacionId] = useState<string | null>(null);
+  // Módulo 7: PDF y envío por WhatsApp
+  const [documentoAbierto, setDocumentoAbierto] = useState<{ ordenId: string; tipo: TipoDocumentoPublico; cotizacion?: CotizacionOrden | null } | null>(null);
 
   /** Los cambios a estos estados tienen su propio flujo (Módulo 6). Devuelve true si desvió. */
   const desviarFlujoEntrega = (orden: OrdenServicio, nuevoEstado: EstadoOrden | null | undefined): boolean => {
@@ -961,6 +966,7 @@ function TallerAppContent() {
         onAbrirImprimir={(ord) => {
           setOrdenImprimir(ord);
         }}
+        onAbrirDocumento={(ord) => setDocumentoAbierto({ ordenId: ord.id, tipo: 'orden' })}
         onAbrirSubirFirma={(ord) => {
           setOrdenSubirFirma(ord);
         }}
@@ -1205,6 +1211,7 @@ function TallerAppContent() {
             config={config}
             isOpen={cotizacionParaImprimir !== null}
             onClose={() => setCotizacionParaImprimir(null)}
+            onEnviar={(cot) => setDocumentoAbierto({ ordenId: cot.ordenId, tipo: 'cotizacion', cotizacion: cot })}
           />
         </>
       )}
@@ -1228,6 +1235,20 @@ function TallerAppContent() {
           usuarioActual={usuarioActual}
           onClose={() => setActaAbierta(null)}
           onAbrirPagos={(ord) => setOrdenPagosId(ord.id)}
+          onEnviar={(ord) =>
+            setDocumentoAbierto({ ordenId: ord.id, tipo: ord.actaEntrega?.tipo === 'devolucion' ? 'acta_devolucion' : 'acta_entrega' })
+          }
+          onExito={(m) => mostrarNotificacion(m)}
+        />
+      )}
+      {documentoAbierto && usuarioActual && ordenes.find((o) => o.id === documentoAbierto.ordenId) && (
+        <DocumentoEnvioModal
+          orden={ordenes.find((o) => o.id === documentoAbierto.ordenId)!}
+          tipo={documentoAbierto.tipo}
+          cotizacion={documentoAbierto.cotizacion}
+          config={config}
+          usuarioActual={usuarioActual}
+          onClose={() => setDocumentoAbierto(null)}
           onExito={(m) => mostrarNotificacion(m)}
         />
       )}
@@ -1257,6 +1278,8 @@ function TallerAppContent() {
 }
 
 export default function App() {
+  // Página pública de verificación por QR: no exige iniciar sesión.
+  if (/^#\/v\//.test(window.location.hash)) return <VerificacionPublica />;
   return (
     <AuthProvider>
       <TallerAppContent />

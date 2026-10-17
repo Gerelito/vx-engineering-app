@@ -6,6 +6,7 @@ import { collection, onSnapshot } from 'firebase/firestore';
 import {
   X,
   Printer,
+  MessageCircle,
   FileCheck,
   Camera,
   AlertTriangle,
@@ -33,6 +34,7 @@ interface DetalleOrdenModalProps {
   isOpen: boolean;
   onClose: () => void;
   onAbrirImprimir: (orden: OrdenServicio) => void;
+  onAbrirDocumento?: (orden: OrdenServicio) => void;
   onAbrirSubirFirma: (orden: OrdenServicio) => void;
   onCambiarEstado?: (orden: OrdenServicio, nuevoEstado: OrdenServicio['estado']) => void;
   onAbrirTransicion?: (orden: OrdenServicio) => void;
@@ -50,6 +52,7 @@ export const DetalleOrdenModal: React.FC<DetalleOrdenModalProps> = ({
   isOpen,
   onClose,
   onAbrirImprimir,
+  onAbrirDocumento,
   onAbrirSubirFirma,
   onCambiarEstado,
   onAbrirTransicion,
@@ -112,6 +115,15 @@ export const DetalleOrdenModal: React.FC<DetalleOrdenModalProps> = ({
           </div>
 
           <div className="flex items-center gap-2">
+            {onAbrirDocumento && (
+              <button
+                onClick={() => onAbrirDocumento(orden)}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-green-600 hover:bg-green-500 text-white rounded-lg text-xs font-bold transition-colors cursor-pointer"
+              >
+                <MessageCircle className="w-4 h-4" />
+                <span>PDF / WhatsApp</span>
+              </button>
+            )}
             <button
               onClick={() => onAbrirImprimir(orden)}
               className="flex items-center gap-1.5 px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white rounded-lg text-xs font-semibold transition-colors cursor-pointer"

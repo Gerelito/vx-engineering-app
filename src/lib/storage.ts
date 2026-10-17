@@ -19,6 +19,7 @@ import {
   RegistroAprobacionCliente,
 } from '../types';
 import { db } from './firebase';
+import { sincronizarVerificacion } from './verificacion';
 import {
   doc,
   collection,
@@ -1130,6 +1131,7 @@ export async function crearOrdenRecepcionFirestore(
     fecha: serverTimestamp(),
   };
   batch.set(auditOrdenRef, limpiarUndefined(auditOrdenData));
+  sincronizarVerificacion(batch, ordenDocRaw, 'Recibido', auditOrdenRef.id);
 
   await batch.commit();
 
@@ -1179,6 +1181,7 @@ export async function sincronizarOrdenesPendientes(
         fecha: serverTimestamp(),
       };
       batch.set(auditRef, limpiarUndefined(auditData));
+      sincronizarVerificacion(batch, { ...ord, folio: res.folio }, ord.estado, auditRef.id);
 
       await batch.commit();
       sincronizadas++;
@@ -1335,6 +1338,7 @@ export async function actualizarEstadoOrdenFirestore(
     fecha: serverTimestamp(),
   };
   batch.set(auditRef, limpiarUndefined(auditData));
+  sincronizarVerificacion(batch, orden, nuevoEstado, auditRef.id);
 
   await batch.commit();
 }
@@ -1839,6 +1843,9 @@ export async function registrarTrabajoAdicionalFirestore(
     fecha: serverTimestamp(),
   };
   batch.set(auditOrdenRef, limpiarUndefined(auditOrdenData));
+  if (updatePayload.estado && updatePayload.estado !== orden.estado) {
+    sincronizarVerificacion(batch, orden, updatePayload.estado, auditOrdenRef.id);
+  }
 
   await batch.commit();
   return nuevoHallazgo;
@@ -2048,6 +2055,9 @@ export async function guardarCotizacionFirestore(
     fecha: serverTimestamp(),
   };
   batch.set(auditRef, limpiarUndefined(auditData));
+  if (!cotizacionInput.esComplementariaTrabajoAdicional) {
+    sincronizarVerificacion(batch, orden, orden.estado, auditOrdenRef.id, { version: siguienteVersionNumero });
+  }
 
   await batch.commit();
   return cotizacionDoc;
@@ -2235,6 +2245,7 @@ export async function registrarAprobacionCotizacionFirestore(
     fecha: serverTimestamp(),
   };
   batch.set(auditOrdRef, limpiarUndefined(auditOrdData));
+  sincronizarVerificacion(batch, orden, aprobacionData.nuevoEstadoOrden, auditOrdRef.id);
 
   await batch.commit();
 }
@@ -2278,10 +2289,34 @@ export async function rechazarCotizacionFirestore(
 
   const historialActualizado = [...(orden.historialEstados || []), nuevoHistorialItem];
 
+  // Queda como cancelación abierta (Módulo 6) hasta devolver el vehículo; se cobra el diagnóstico si fue autorizado.
+  const montoDiagnosticoBs = orden.autorizaciones?.autorizaDiagnostico
+    ? Math.max(0, orden.autorizaciones.costoDiagnosticoBs || 0)
+    : 0;
+  const cancelacion = orden.cancelacion || {
+    estado: 'abierta' as const,
+    motivo: 'El cliente rechazó la cotización' as const,
+    nota: motivoRechazo || null,
+    fecha: new Date().toISOString(),
+    registradoPorNombre: duenoActual.displayName || duenoActual.email,
+    registradoPorEmail: duenoActual.email.toLowerCase(),
+    vehiculoDesarmado: false,
+    rearmado: null,
+    cobrarDiagnostico: montoDiagnosticoBs > 0,
+    montoDiagnosticoBs,
+    repuestosLiberados: true,
+    seguimientoFecha: null,
+    seguimientoRealizado: false,
+  };
+
   batch.update(
     ordenRef,
     limpiarUndefined({
       estado: 'Cancelada',
+      cancelacion,
+      montoAprobadoPrincipalBs: orden.cancelacion ? orden.montoAprobadoPrincipalBs ?? 0 : montoDiagnosticoBs,
+      montoAprobadoAdicionalesBs: orden.cancelacion ? orden.montoAprobadoAdicionalesBs ?? 0 : 0,
+      cotizacionConPrecioPorDefinir: false,
       fechaIngresoEstadoActual: serverTimestamp(),
       fechaIngresoEstadoActualServidor: serverTimestamp(),
       historialEstados: historialActualizado,
@@ -2319,6 +2354,7 @@ export async function rechazarCotizacionFirestore(
     fecha: serverTimestamp(),
   };
   batch.set(auditOrdRef, limpiarUndefined(auditOrdData));
+  sincronizarVerificacion(batch, orden, 'Cancelada', auditOrdRef.id);
 
   await batch.commit();
 }

@@ -484,7 +484,8 @@ export interface AuditoriaEvento {
 
 export interface TallerConfig {
   nombre: string;
-  logoUrl?: string | null;
+  logoUrl?: string | null; // data URL comprimida o URL pública
+  colorMarca?: string; // color del taller para documentos (#RRGGBB)
   direccion: string;
   ciudad: string;
   pais: string;

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { procesarArchivoAdjunto } from '../lib/fileCompression';
 import { useAuth } from '../context/AuthContext';
 import { TallerConfig, TrabajoTarifario } from '../types';
 import {
@@ -45,6 +46,10 @@ export const ConfiguracionModal: React.FC<ConfiguracionModalProps> = ({
   const [direccion, setDireccion] = useState(config.direccion);
   const [telefonoWhatsapp, setTelefonoWhatsapp] = useState(config.telefonoWhatsapp);
   const [horario, setHorario] = useState(config.horario);
+  const [colorMarca, setColorMarca] = useState(config.colorMarca || '#C2410C');
+  const [logoUrl, setLogoUrl] = useState<string | null>(config.logoUrl || null);
+  const [urlVerificacion, setUrlVerificacion] = useState(config.dominioVerificacionQr || '');
+  const [errorLogo, setErrorLogo] = useState<string | null>(null);
   const [tarifaHora, setTarifaHora] = useState(config.tarifaHoraEstandarBs);
   const [margenMinimo, setMargenMinimo] = useState(config.margenMinimoPorcentaje);
   const [vigenciaDias, setVigenciaDias] = useState<number>(config.vigenciaCotizacionDias || 7);
@@ -203,6 +208,9 @@ export const ConfiguracionModal: React.FC<ConfiguracionModalProps> = ({
         direccion: direccion.trim(),
         telefonoWhatsapp: telefonoWhatsapp.trim(),
         horario: horario.trim(),
+        colorMarca: /^#[0-9a-fA-F]{6}$/.test(colorMarca) ? colorMarca : '#C2410C',
+        logoUrl: logoUrl || null,
+        dominioVerificacionQr: urlVerificacion.trim().replace(/\/+$/, ''),
         tarifaHoraEstandarBs: Number(tarifaHora) || 90,
         margenMinimoPorcentaje: Number(margenMinimo) || 25,
         vigenciaCotizacionDias: Number(vigenciaDias) || 7,
@@ -430,6 +438,68 @@ export const ConfiguracionModal: React.FC<ConfiguracionModalProps> = ({
                     onChange={(e) => setHorario(e.target.value)}
                     className="w-full px-3 py-1.5 rounded-lg border border-slate-300 bg-white"
                   />
+                </div>
+
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">Color del taller (documentos PDF)</label>
+                  <div className="flex items-center gap-2">
+                    <input type="color" value={colorMarca} onChange={(e) => setColorMarca(e.target.value)} className="h-9 w-12 rounded border border-slate-300 bg-white" />
+                    <input
+                      type="text"
+                      value={colorMarca}
+                      onChange={(e) => setColorMarca(e.target.value)}
+                      className="flex-1 px-3 py-1.5 rounded-lg border border-slate-300 bg-white font-mono"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">Logo (PNG o JPG)</label>
+                  <div className="flex items-center gap-2">
+                    {logoUrl ? (
+                      <img src={logoUrl} alt="Logo" className="h-9 w-9 object-contain rounded border border-slate-200 bg-white" />
+                    ) : (
+                      <span className="h-9 w-9 flex items-center justify-center rounded border border-dashed border-slate-300 text-[9px] text-slate-400">LOGO</span>
+                    )}
+                    <label className="px-3 py-1.5 rounded-lg border border-slate-300 bg-white font-semibold cursor-pointer">
+                      Subir
+                      <input
+                        type="file"
+                        accept="image/png,image/jpeg"
+                        className="hidden"
+                        onChange={async (e) => {
+                          const f = e.target.files?.[0];
+                          if (!f) return;
+                          setErrorLogo(null);
+                          try {
+                            const r = await procesarArchivoAdjunto(f);
+                            if (r.tamanioBytes > 150_000) throw new Error('El logo quedó muy pesado; usa una imagen más simple.');
+                            setLogoUrl(r.base64Data);
+                          } catch (err: any) {
+                            setErrorLogo(err?.message || String(err));
+                          }
+                        }}
+                      />
+                    </label>
+                    {logoUrl && (
+                      <button type="button" onClick={() => setLogoUrl(null)} className="text-rose-700 font-semibold">
+                        Quitar
+                      </button>
+                    )}
+                  </div>
+                  {errorLogo && <p className="text-rose-700 mt-1">{errorLogo}</p>}
+                </div>
+
+                <div className="sm:col-span-2">
+                  <label className="block font-semibold text-slate-700 mb-1">URL pública de verificación (QR)</label>
+                  <input
+                    type="url"
+                    value={urlVerificacion}
+                    onChange={(e) => setUrlVerificacion(e.target.value)}
+                    placeholder="https://gerelito.github.io/vx-engineering-app"
+                    className="w-full px-3 py-1.5 rounded-lg border border-slate-300 bg-white font-mono"
+                  />
+                  <p className="text-slate-500 mt-1">Dirección donde está publicada la app. Los QR de los documentos apuntan aquí.</p>
                 </div>
 
                 <div>
