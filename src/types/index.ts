@@ -1,3 +1,6 @@
+/** Fecha guardada en Firestore: texto ISO (registros antiguos), Timestamp del servidor o FieldValue al escribir. */
+export type FechaFS = string | number | { toDate: () => Date } | { seconds: number } | import('firebase/firestore').FieldValue | null;
+
 export interface DuenoUsuario {
   uid: string;
   email: string;
@@ -32,8 +35,8 @@ export interface Cliente {
   activo: boolean; // Desactivación lógica (prohibido borrar según reglas)
   notas?: string | null;
   auditoriaId?: string; // ID de auditoría atómica vinculada
-  createdAt: string;
-  updatedAt: string;
+  createdAt: FechaFS;
+  updatedAt: FechaFS;
 }
 
 export type TipoCombustible = 'Gasolina' | 'Diésel' | 'GNV' | 'Híbrido' | 'Eléctrico';
@@ -70,8 +73,8 @@ export interface Vehiculo {
   notasTecnicas?: string | null;
   activo: boolean; // Desactivación lógica (prohibido borrar según reglas)
   auditoriaId?: string; // ID de auditoría atómica vinculada
-  createdAt: string;
-  updatedAt: string;
+  createdAt: FechaFS;
+  updatedAt: FechaFS;
 }
 
 export interface ArchivoCliente {
@@ -378,7 +381,8 @@ export interface OrdenServicio {
   bahiaAsignada?: string | null;
   mecanicoResponsable?: string | null;
   historialEstados?: HistorialEstado[];
-  fechaIngresoEstadoActual?: string | null;
+  fechaIngresoEstadoActual?: FechaFS;
+  fechaIngresoEstadoActualServidor?: FechaFS;
   fechaEstimadaLlegadaRepuestos?: string | null;
   aprobaciones?: AprobacionCliente | null;
   tareas?: TareaOrden[];
@@ -392,8 +396,8 @@ export interface OrdenServicio {
   creadoPorEmail: string;
   creadoPorNombre: string;
   auditoriaId: string;
-  createdAt: string;
-  updatedAt: string;
+  createdAt: FechaFS;
+  updatedAt: FechaFS;
   fechaCreacion?: any; // Firestore serverTimestamp
 }
 

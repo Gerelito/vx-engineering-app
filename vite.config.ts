@@ -5,6 +5,8 @@ import {defineConfig} from 'vite';
 
 export default defineConfig(() => {
   return {
+    // GitHub Pages publica la app en /vx-engineering-app/
+    base: process.env.GITHUB_PAGES === 'true' ? '/vx-engineering-app/' : '/',
     plugins: [react(), tailwindcss()],
     resolve: {
       alias: {

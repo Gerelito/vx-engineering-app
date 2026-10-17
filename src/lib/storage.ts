@@ -147,6 +147,24 @@ export function formatearTelefonoBolivia(tel: string): string {
  * - Zona horaria de Bolivia: America/La_Paz (UTC-4)
  * - Formato: dd/mm/aaaa hh:mm (o solo dd/mm/aaaa si incluirHora = false)
  */
+/**
+ * Convierte cualquier representación de fecha guardada (ISO, número, Date,
+ * Timestamp de Firestore u objeto {seconds}) a milisegundos. Devuelve null si no es válida
+ * (por ejemplo, un serverTimestamp todavía pendiente).
+ */
+export function aMilisegundos(fecha: any): number | null {
+  if (fecha === null || fecha === undefined || fecha === '') return null;
+  let ms: number;
+  if (typeof fecha?.toMillis === 'function') ms = fecha.toMillis();
+  else if (typeof fecha?.toDate === 'function') ms = fecha.toDate().getTime();
+  else if (fecha instanceof Date) ms = fecha.getTime();
+  else if (typeof fecha === 'number') ms = fecha;
+  else if (typeof fecha === 'string') ms = Date.parse(fecha.includes('T') || fecha.endsWith('Z') ? fecha : fecha.replace(' ', 'T'));
+  else if (typeof fecha?.seconds === 'number') ms = fecha.seconds * 1000;
+  else return null;
+  return isNaN(ms) ? null : ms;
+}
+
 export function formatearFecha(fecha: any, incluirHora: boolean = true): string {
   if (!fecha) return '—';
   let d: Date;
@@ -1976,7 +1994,32 @@ export async function guardarCotizacionFirestore(
       ordenUpdate.presupuestoOriginalBs = totalCalculado;
     }
   }
+  // La orden necesita su propio registro de auditoría (las reglas exigen uno por documento)
+  const auditOrdenRef = doc(collection(db, 'auditoria'));
+  ordenUpdate.auditoriaId = auditOrdenRef.id;
   batch.update(ordenRef, limpiarUndefined(ordenUpdate));
+  batch.set(
+    auditOrdenRef,
+    limpiarUndefined({
+      modulo: 'Cotizaciones',
+      accion: 'Presupuesto de orden actualizado',
+      entidad: 'ordenes',
+      entidadId: orden.id,
+      antes: {
+        costoTotalEstimadoBs: orden.costoTotalEstimadoBs ?? null,
+        presupuestoOriginalBs: orden.presupuestoOriginalBs ?? null,
+      },
+      despues: {
+        cotizacion: versionId,
+        costoTotalEstimadoBs: ordenUpdate.costoTotalEstimadoBs ?? orden.costoTotalEstimadoBs ?? null,
+        presupuestoOriginalBs: ordenUpdate.presupuestoOriginalBs ?? orden.presupuestoOriginalBs ?? null,
+      },
+      usuarioUid: duenoActual.uid,
+      usuarioEmail: duenoActual.email.toLowerCase(),
+      usuarioNombre: duenoActual.displayName || duenoActual.email,
+      fecha: serverTimestamp(),
+    })
+  );
 
   // Auditoría atómica (acción sensible si incluye descuento)
   const huboDescuento =

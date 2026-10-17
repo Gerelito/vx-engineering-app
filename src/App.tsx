@@ -54,6 +54,7 @@ import {
   subirFotoDiagnosticoFirestore,
   registrarTrabajoAdicionalFirestore,
   obtenerCotizacionesOrdenFirestore,
+  aMilisegundos,
 } from './lib/storage';
 import {
   Cliente,
@@ -271,8 +272,8 @@ function TallerAppContent() {
         const lista: OrdenServicio[] = snapshot.docs.map((d) => d.data() as OrdenServicio);
         // Ordenar por fecha descendente
         lista.sort((a, b) => {
-          const tA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-          const tB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+          const tA = aMilisegundos(a.createdAt) ?? Date.now();
+          const tB = aMilisegundos(b.createdAt) ?? Date.now();
           return tB - tA;
         });
         setOrdenes(lista);

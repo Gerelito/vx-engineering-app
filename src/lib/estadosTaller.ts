@@ -1,3 +1,4 @@
+import { aMilisegundos } from './storage';
 import { EstadoOrden, OrdenServicio, TallerConfig, HistorialEstado } from '../types';
 
 /**
@@ -229,15 +230,8 @@ export function calcularAlertaTiempoEstado(
     }
   }
 
-  if (!inicioTimestamp && orden.fechaIngresoEstadoActual) {
-    const parsed = Date.parse(orden.fechaIngresoEstadoActual);
-    if (!isNaN(parsed)) inicioTimestamp = parsed;
-  }
-
-  if (!inicioTimestamp && orden.createdAt) {
-    const parsed = Date.parse(orden.createdAt);
-    if (!isNaN(parsed)) inicioTimestamp = parsed;
-  }
+  if (!inicioTimestamp) inicioTimestamp = aMilisegundos(orden.fechaIngresoEstadoActual);
+  if (!inicioTimestamp) inicioTimestamp = aMilisegundos(orden.createdAt);
 
   if (!inicioTimestamp) {
     return {

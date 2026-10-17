@@ -12,7 +12,7 @@ import {
   calcularAlertaTiempoEstado,
   obtenerSiguientesEstadosPermitidos,
 } from '../../lib/estadosTaller';
-import { formatearTelefonoBolivia, obtenerTelefonoE164 } from '../../lib/storage';
+import { formatearTelefonoBolivia, obtenerTelefonoE164, aMilisegundos } from '../../lib/storage';
 import {
   Wrench,
   Search,
@@ -441,9 +441,13 @@ export const TableroKanban: React.FC<TableroKanbanProps> = ({
                               ?.slice()
                               .reverse()
                               .find((h) => h.estado === 'Esperando aprobación');
-                            const fechaEntrada = entrada?.fecha || ord.fechaIngresoEstadoActual || ord.createdAt;
-                            if (!fechaEntrada) return null;
-                            const ms = Date.now() - new Date(fechaEntrada).getTime();
+                            const msEntrada =
+                              aMilisegundos(entrada?.fechaTimestamp) ??
+                              aMilisegundos(entrada?.fecha) ??
+                              aMilisegundos(ord.fechaIngresoEstadoActual) ??
+                              aMilisegundos(ord.createdAt);
+                            if (!msEntrada) return null;
+                            const ms = Date.now() - msEntrada;
                             const horas = Math.max(0, Math.floor(ms / (1000 * 60 * 60)));
 
                             const esCritico = horas >= 48;
