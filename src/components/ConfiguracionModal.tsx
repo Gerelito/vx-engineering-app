@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { ClavePlantillaWhatsapp, ClaveTextoLegal, OrdenServicio, TallerConfig, TrabajoTarifario } from '../types';
 import { PLANTILLAS_WHATSAPP, TEXTOS_LEGALES } from '../lib/plantillas';
 import { PanelRespaldo } from './modulo10/PanelRespaldo';
+import { GARANTIA_KM_DEFECTO, GARANTIA_MESES_DEFECTO } from '../lib/garantia';
 import {
   X,
   Settings,
@@ -57,6 +58,8 @@ export const ConfiguracionModal: React.FC<ConfiguracionModalProps> = ({
   // Módulo 10
   const [diasGratis, setDiasGratis] = useState<number>(config.almacenajeDiasGratis ?? 3);
   const [costoDiario, setCostoDiario] = useState<number>(config.almacenajeCostoDiarioBs ?? 0);
+  const [garMeses, setGarMeses] = useState<number>(config.garantiaMesesDefecto ?? GARANTIA_MESES_DEFECTO);
+  const [garKm, setGarKm] = useState<number>(config.garantiaKmDefecto ?? GARANTIA_KM_DEFECTO);
   const [mediosPago, setMediosPago] = useState<string[]>(config.mediosPago?.length ? config.mediosPago : ['QR', 'Efectivo']);
   const [nuevoMedio, setNuevoMedio] = useState('');
   const [plantillas, setPlantillas] = useState<Record<ClavePlantillaWhatsapp, string>>({
@@ -245,6 +248,8 @@ export const ConfiguracionModal: React.FC<ConfiguracionModalProps> = ({
         limiteControlCalidadHoras: Number(limiteQcHoras) || 4,
         almacenajeDiasGratis: Math.max(0, Number(diasGratis) || 0),
         almacenajeCostoDiarioBs: Math.max(0, Number(costoDiario) || 0),
+        garantiaMesesDefecto: Math.max(0, Math.round(Number(garMeses) || 0)),
+        garantiaKmDefecto: Math.max(0, Math.round(Number(garKm) || 0)),
         mediosPago: mediosPago.length ? mediosPago : ['QR', 'Efectivo'],
         plantillasWhatsapp: plantillas,
         textosLegales: textos,
@@ -338,7 +343,7 @@ export const ConfiguracionModal: React.FC<ConfiguracionModalProps> = ({
           </button>
           {(
             [
-              ['cobros', '5. Almacenaje & Pagos'],
+              ['cobros', '5. Cobros & Garantía'],
               ['mensajes', '6. WhatsApp & Textos'],
               ['seguridad', '7. Seguridad'],
               ['respaldo', '8. Respaldo'],
@@ -879,6 +884,20 @@ export const ConfiguracionModal: React.FC<ConfiguracionModalProps> = ({
                   <label>
                     <span className="block font-semibold text-slate-700 mb-1">Cargo por día (Bs)</span>
                     <input type="number" min="0" value={costoDiario} onChange={(e) => setCostoDiario(Number(e.target.value))} className="w-full px-3 py-1.5 rounded-lg border border-slate-300 bg-white" />
+                  </label>
+                </div>
+              </div>
+              <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
+                <h3 className="text-sm font-bold text-slate-900">Garantía por defecto al entregar</h3>
+                <p className="text-slate-600">Se propone en cada acta de entrega y se puede cambiar ahí. Vence con lo que ocurra primero. 0 y 0 = sin garantía.</p>
+                <div className="grid grid-cols-2 gap-3">
+                  <label>
+                    <span className="block font-semibold text-slate-700 mb-1">Meses</span>
+                    <input type="number" min="0" max="60" value={garMeses} onChange={(e) => setGarMeses(Number(e.target.value))} className="w-full px-3 py-1.5 rounded-lg border border-slate-300 bg-white" />
+                  </label>
+                  <label>
+                    <span className="block font-semibold text-slate-700 mb-1">Kilómetros</span>
+                    <input type="number" min="0" step="500" value={garKm} onChange={(e) => setGarKm(Number(e.target.value))} className="w-full px-3 py-1.5 rounded-lg border border-slate-300 bg-white" />
                   </label>
                 </div>
               </div>

@@ -13,7 +13,9 @@ import {
 import { calcularFinanzasOrden, redondearBs } from '../../lib/caja';
 import { procesarArchivoAdjunto } from '../../lib/fileCompression';
 import { formatearFecha, formatearMonedaBs } from '../../lib/storage';
-import { AlertTriangle, MessageCircle, Camera, CheckCircle2, FileSignature, KeyRound, Loader2, Printer, Wallet, X } from 'lucide-react';
+import { garantiaPorDefecto, textoGarantia } from '../../lib/garantia';
+import { textoLegal } from '../../lib/plantillas';
+import { AlertTriangle, ShieldCheck, MessageCircle, Camera, CheckCircle2, FileSignature, KeyRound, Loader2, Printer, Wallet, X } from 'lucide-react';
 
 interface Props {
   orden: OrdenServicio;
@@ -46,6 +48,8 @@ export const ActaEntregaModal: React.FC<Props> = ({ orden, tipo, config, usuario
   const [trabajos, setTrabajos] = useState<string[]>([]);
   const [noAprobadas, setNoAprobadas] = useState<string[]>([]);
   const [observaciones, setObservaciones] = useState('');
+  const [garMeses, setGarMeses] = useState(String(garantiaPorDefecto(config).meses));
+  const [garKm, setGarKm] = useState(String(garantiaPorDefecto(config).km));
   const [subiendo, setSubiendo] = useState<string | null>(null);
   const [guardando, setGuardando] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -131,6 +135,8 @@ export const ActaEntregaModal: React.FC<Props> = ({ orden, tipo, config, usuario
           recomendacionesNoAprobadas: noAprobadas,
           observaciones,
           fotosSalidaIds,
+          garantiaMeses: parseInt(garMeses, 10) || 0,
+          garantiaKm: parseInt(garKm, 10) || 0,
         },
         config,
         usuarioActual
@@ -304,6 +310,26 @@ export const ActaEntregaModal: React.FC<Props> = ({ orden, tipo, config, usuario
                 </div>
               </section>
 
+              {tipo === 'entrega' && (
+                <section className="bg-emerald-50/60 border border-emerald-200 rounded-xl p-3 space-y-2">
+                  <p className="text-sm font-bold flex items-center gap-1.5 text-emerald-900">
+                    <ShieldCheck className="w-4 h-4" /> Garantía del trabajo
+                  </p>
+                  <div className="flex flex-wrap items-end gap-3 text-xs">
+                    <label>
+                      <span className="block text-slate-600">Meses</span>
+                      <input type="number" inputMode="numeric" min="0" max="60" value={garMeses} onChange={(e) => setGarMeses(e.target.value)} className="w-20 border border-slate-300 rounded-lg px-2 py-1.5 bg-white text-sm" />
+                    </label>
+                    <span className="pb-2 text-slate-500">o</span>
+                    <label>
+                      <span className="block text-slate-600">Kilómetros</span>
+                      <input type="number" inputMode="numeric" min="0" step="500" value={garKm} onChange={(e) => setGarKm(e.target.value)} className="w-28 border border-slate-300 rounded-lg px-2 py-1.5 bg-white text-sm" />
+                    </label>
+                    <span className="pb-2 text-slate-500">(lo que ocurra primero · 0 y 0 = sin garantía)</span>
+                  </div>
+                </section>
+              )}
+
               <textarea
                 value={observaciones}
                 onChange={(e) => setObservaciones(e.target.value)}
@@ -401,6 +427,12 @@ const ActaImprimible: React.FC<{
         <p><b>Saldo:</b> {formatearMonedaBs(acta.saldoAlEntregarBs)}</p>
       </div>
       {acta.observaciones && <p><b>Observaciones:</b> {acta.observaciones}</p>}
+      {acta.tipo === 'entrega' && (
+        <div className="border border-slate-300 rounded-lg p-2">
+          <p><b>Garantía:</b> {textoGarantia(acta.garantia)}</p>
+          {acta.garantia && <p className="text-xs text-slate-600">{textoLegal(config, 'exclusionesGarantia')}</p>}
+        </div>
+      )}
 
       {fotosSalida.length > 0 && (
         <div className="grid grid-cols-5 gap-1">

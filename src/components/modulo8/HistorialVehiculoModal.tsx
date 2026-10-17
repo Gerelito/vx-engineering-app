@@ -14,6 +14,7 @@ import {
   ultimosComponentes,
 } from '../../lib/historial';
 import { formatearMonedaBs } from '../../lib/storage';
+import { garantiasVigentes, textoGarantia, trabajosCubiertos } from '../../lib/garantia';
 import {
   AlertTriangle,
   Ban,
@@ -70,6 +71,7 @@ export const HistorialVehiculoModal: React.FC<Props> = ({ vehiculo, clientes, or
   const [repuesto, setRepuesto] = useState('');
 
   const ordenesVehiculo = useMemo(() => ordenes.filter((o) => o.vehiculoId === vehiculo.id), [ordenes, vehiculo.id]);
+  const garantias = useMemo(() => garantiasVigentes(ordenes, vehiculo.id, vehiculo.ultimoKilometraje), [ordenes, vehiculo.id, vehiculo.ultimoKilometraje]);
   const claveOrdenes = ordenesVehiculo.map((o) => `${o.id}:${o.estado}:${(o as any).updatedAt?.seconds || ''}`).join('|');
   void usuarioActual;
 
@@ -159,7 +161,25 @@ export const HistorialVehiculoModal: React.FC<Props> = ({ vehiculo, clientes, or
                   </p>
                 ))
               )}
-              <p className="text-[11px] text-slate-400">Garantía vigente: disponible en una fase posterior.</p>
+              {garantias.length === 0 ? (
+                <p className="text-[11px] text-slate-500">Sin garantía vigente.</p>
+              ) : (
+                garantias.map((g) => (
+                  <button
+                    key={g.orden.id}
+                    onClick={() => onAbrirOrden(g.orden)}
+                    className="w-full text-left text-sm rounded-lg px-3 py-2 flex gap-2 border bg-emerald-50 border-emerald-200 text-emerald-900"
+                  >
+                    <ShieldCheck className="w-4 h-4 mt-0.5 shrink-0" />
+                    <span>
+                      <b>Garantía vigente {g.orden.folio}</b>: {textoGarantia(g.garantia)}
+                      {g.diasRestantes !== null ? ` · quedan ${g.diasRestantes} día(s)` : ''}
+                      {g.kmRestantes !== null ? ` · ${g.kmRestantes.toLocaleString('es-BO')} km` : ''}
+                      <span className="block text-xs text-emerald-800">Cubre: {trabajosCubiertos(g.orden)}</span>
+                    </span>
+                  </button>
+                ))
+              )}
             </div>
           )}
 

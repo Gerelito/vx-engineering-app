@@ -26,6 +26,7 @@ import {
   Plus,
   DollarSign,
 } from 'lucide-react';
+import { estaVigente, textoGarantia } from '../../lib/garantia';
 import { ESTILOS_ESTADO, obtenerSiguientesEstadosPermitidos } from '../../lib/estadosTaller';
 import { formatearFecha, formatearMonedaBs, formatearTelefonoBolivia } from '../../lib/storage';
 
@@ -106,6 +107,11 @@ export const DetalleOrdenModal: React.FC<DetalleOrdenModalProps> = ({
                 <h3 className="text-sm sm:text-base font-bold whitespace-nowrap">
                   <span className="hidden sm:inline">Orden de Servicio </span>{orden.folio}
                 </h3>
+                {orden.reclamoGarantia && (
+                  <span className="text-[10px] font-bold bg-emerald-500 text-white px-2 py-0.5 rounded-full">
+                    Garantía de {orden.reclamoGarantia.folioOrigen}
+                  </span>
+                )}
                 {orden.sincronizacionFolio === 'pendiente' && (
                   <span className="text-[10px] font-bold bg-amber-500 text-slate-950 px-2 py-0.5 rounded-full">
                     Folio provisional (Sin internet al crear)
@@ -292,6 +298,13 @@ export const DetalleOrdenModal: React.FC<DetalleOrdenModalProps> = ({
               </span>
             </div>
           </div>
+
+          {orden.estado === 'Entregado' && (
+            <div className={`p-3 rounded-xl border text-xs ${orden.garantia && estaVigente(orden.garantia) ? 'bg-emerald-50 border-emerald-200 text-emerald-900' : 'bg-slate-50 border-slate-200 text-slate-600'}`}>
+              <b>Garantía:</b> {textoGarantia(orden.garantia)}
+              {orden.garantia && !estaVigente(orden.garantia) ? ' (vencida por fecha)' : ''}
+            </div>
+          )}
 
           {/* Motivo de ingreso */}
           <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-2">

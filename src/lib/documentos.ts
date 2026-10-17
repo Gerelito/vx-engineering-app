@@ -10,6 +10,8 @@ import { db } from './firebase';
 import { aMilisegundos, obtenerCotizacionesOrdenFirestore } from './storage';
 import { calcularFinanzasOrden } from './caja';
 import { OBJETOS_ACCESORIOS } from './entrega';
+import { textoGarantia } from './garantia';
+import { textoLegal } from './plantillas';
 import { PASOS_CLIENTE, estadoParaCliente } from './verificacion';
 import { CotizacionOrden, EstadoOrden, ItemCotizacion, OrdenServicio, PagoOrden, TallerConfig } from '../types';
 
@@ -837,6 +839,23 @@ export async function generarPdfActa(orden: OrdenServicio, config: TallerConfig)
   L.y += h + 5;
   L.recomendaciones(acta.recomendacionesNoAprobadas);
   if (acta.observaciones) L.cita('Observaciones', acta.observaciones);
+  if (acta.tipo === 'entrega') {
+    L.fuente(9, 'normal');
+    const lg = L.partir(textoGarantia(acta.garantia) + '.', ANCHO_UTIL - 3);
+    const ex = acta.garantia ? L.partir(textoLegal(config, 'exclusionesGarantia'), ANCHO_UTIL - 3) : [];
+    L.espacio(10 + L.alto(9, lg.length) + (ex.length ? L.alto(8, ex.length) + 1 : 0));
+    L.titulo('Garantía del trabajo');
+    L.y += 4.5;
+    L.fuente(9, 'bold');
+    L.texto(lg.join('\n'), PAGINA.izq + 1.5, L.y);
+    L.y += L.alto(9, lg.length);
+    if (ex.length) {
+      L.fuente(8, 'normal', GRIS);
+      L.texto(ex.join('\n'), PAGINA.izq + 1.5, L.y + 1);
+      L.y += L.alto(8, ex.length) + 1;
+    }
+    L.y += 2;
+  }
   L.fuente(8.5, 'normal', GRIS);
   const decl = L.partir(
     acta.tipo === 'entrega'

@@ -472,8 +472,14 @@ export const OrdenesList: React.FC<OrdenesListProps> = ({
                       </p>
                     )}
 
+                    {orden.reclamoGarantia && (
+                      <p className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-900 bg-emerald-50 border border-emerald-300 px-2 py-0.5 rounded">
+                        Reclamo de garantía de {orden.reclamoGarantia.folioOrigen}
+                      </p>
+                    )}
+
                     {/* Estado de la Firma Física */}
-                    <div className="flex items-center gap-2 pt-1">
+                    <div className="flex flex-wrap items-center gap-2 pt-1">
                       {orden.firmaSubida ? (
                         <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
                           <CheckCircle2 className="w-3 h-3 text-emerald-600" />

@@ -3,6 +3,7 @@
  * Control de calidad, aviso al cliente, almacenaje, acta de entrega / devolución y cancelación.
  * Cada documento escrito lleva su propio registro de auditoría (lo exigen las reglas).
  */
+import { calcularGarantia, textoGarantia } from './garantia';
 import {
   collection,
   doc,
@@ -293,6 +294,8 @@ export interface DatosActaInput {
   recomendacionesNoAprobadas: string[];
   observaciones?: string | null;
   fotosSalidaIds?: string[];
+  garantiaMeses?: number;
+  garantiaKm?: number;
 }
 
 /**
@@ -381,10 +384,12 @@ export async function entregarVehiculoFirestore(
       firmaSubida: false,
       firmaFotoId: null,
       registradoPorNombre: nombre(dueno),
+      garantia: tipo === 'entrega' ? calcularGarantia(datos.garantiaMeses ?? 0, datos.garantiaKm ?? 0, ahora.toISOString(), datos.kmSalida) : null,
     };
 
     const update: Record<string, any> = {
       actaEntrega: acta,
+      garantia: acta.garantia ?? null,
       fechaEntrega: acta.fecha,
       cargosAdicionalesBs: cargos,
       updatedAt: serverTimestamp(),
@@ -419,7 +424,7 @@ export async function entregarVehiculoFirestore(
       entidad: 'ordenes',
       entidadId: ordenId,
       antes: { estado: orden.estado, cargosAdicionalesBs: orden.cargosAdicionalesBs || 0 },
-      despues: { estado: update.estado || orden.estado, almacenajeBs: alm.montoBs, saldo, quienRetira: acta.quienRetira },
+      despues: { estado: update.estado || orden.estado, almacenajeBs: alm.montoBs, saldo, quienRetira: acta.quienRetira, garantia: acta.garantia ? textoGarantia(acta.garantia) : 'Sin garantía' },
       sensible: saldo !== null && saldo > 0,
     });
     update.auditoriaId = auditId;

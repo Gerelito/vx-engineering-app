@@ -72,6 +72,7 @@ import { CajaView } from './components/modulo5/CajaView';
 import { VerificacionPublica } from './components/modulo7/VerificacionPublica';
 import { DocumentoEnvioModal } from './components/modulo7/DocumentoEnvioModal';
 import { BusquedaGlobal } from './components/modulo8/BusquedaGlobal';
+import { ReportesView } from './components/modulo11/ReportesView';
 import { AuditoriaPantalla } from './components/modulo9/AuditoriaPantalla';
 import { HistorialVehiculoModal } from './components/modulo8/HistorialVehiculoModal';
 import { FichaClienteModal } from './components/modulo8/FichaClienteModal';
@@ -97,7 +98,7 @@ function TallerAppContent() {
   const [config, setConfig] = useState<TallerConfig>(DEFAULT_CONFIG);
 
   // Estados de navegación
-  const [vistaActiva, setVistaActiva] = useState<'recepciones' | 'taller' | 'entregas' | 'caja' | 'clientes' | 'vehiculos' | 'auditoria'>('taller');
+  const [vistaActiva, setVistaActiva] = useState<'recepciones' | 'taller' | 'entregas' | 'caja' | 'clientes' | 'vehiculos' | 'reportes' | 'auditoria'>('taller');
 
   // Estado del indicador de nube (verde = sincronizado; amarillo = pendiente offline; rojo = error de permisos; rosa = error al guardar)
   const [estadoNube, setEstadoNube] = useState<'sincronizado' | 'pendiente_offline' | 'error_permisos' | 'error_guardar'>('sincronizado');
@@ -987,6 +988,8 @@ function TallerAppContent() {
           />
         )}
 
+        {vistaActiva === 'reportes' && <ReportesView ordenes={ordenes} clientes={clientes} />}
+
         {vistaActiva === 'auditoria' && (
           <AuditoriaPantalla ordenes={ordenes} />
         )}
@@ -997,7 +1000,7 @@ function TallerAppContent() {
       <footer className="border-t border-slate-200 bg-white py-4 mt-12 text-center text-xs text-slate-400">
         <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
           <span>{config.nombre || 'VX Engineering'} · Bolivia · 100% Plan Gratuito</span>
-          <span>Datos en Firebase (plan gratuito) · máximo 3 dueños</span>
+          <span>Datos en la nube (plan gratuito) · máximo 3 dueños</span>
         </div>
       </footer>
 
@@ -1015,6 +1018,7 @@ function TallerAppContent() {
         clienteInicialId={recepcionClienteId}
         vehiculoInicialId={recepcionVehiculoId}
         onCrearOrden={handleCrearOrden}
+        ordenes={ordenes}
         onAbrirNuevoCliente={() => {
           setClienteEditar(null);
           setModalClienteAbierto(true);

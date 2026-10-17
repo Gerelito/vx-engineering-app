@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { garantiasVigentes, textoGarantia, trabajosCubiertos } from '../../lib/garantia';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
   Cliente,
   Vehiculo,
@@ -48,6 +49,7 @@ interface RecepcionWizardModalProps {
   vehiculoInicialId?: string;
   onAbrirNuevoCliente: () => void;
   onAbrirNuevoVehiculo: (clienteId?: string) => void;
+  ordenes?: OrdenServicio[];
 }
 
 const NIVELES_COMBUSTIBLE: NivelCombustible[] = [
@@ -108,7 +110,10 @@ export const RecepcionWizardModal: React.FC<RecepcionWizardModalProps> = ({
   vehiculoInicialId,
   onAbrirNuevoCliente,
   onAbrirNuevoVehiculo,
+  ordenes = [],
 }) => {
+  const [reclamoDe, setReclamoDe] = useState<string>('');
+
   // Estado del paso activo (1 a 8)
   const [paso, setPaso] = useState<number>(1);
   const [guardando, setGuardando] = useState(false);
@@ -262,6 +267,11 @@ export const RecepcionWizardModal: React.FC<RecepcionWizardModalProps> = ({
 
   const clienteActual = clientes.find((c) => c.id === clienteSeleccionadoId);
   const vehiculoActual = vehiculos.find((v) => v.id === vehiculoSeleccionadoId);
+  useEffect(() => setReclamoDe(''), [vehiculoSeleccionadoId, isOpen]);
+  const garantiasDelVehiculo = useMemo(
+    () => (vehiculoSeleccionadoId ? garantiasVigentes(ordenes, vehiculoSeleccionadoId, vehiculoActual?.ultimoKilometraje) : []),
+    [ordenes, vehiculoSeleccionadoId, vehiculoActual?.ultimoKilometraje]
+  );
 
   // Vehículos del cliente seleccionado
   const vehiculosDelCliente = clienteSeleccionadoId
@@ -479,6 +489,12 @@ export const RecepcionWizardModal: React.FC<RecepcionWizardModalProps> = ({
             : null,
           textoAlmacenaje: `${config.almacenajeDiasGratis} días gratis; luego ${config.almacenajeCostoDiarioBs} Bs/día.`,
         },
+        reclamoGarantia: (() => {
+          const g = garantiasDelVehiculo.find((x) => x.orden.id === reclamoDe);
+          return g
+            ? { ordenOrigenId: g.orden.id, folioOrigen: g.orden.folio, hastaFecha: g.garantia.hastaFecha, hastaKm: g.garantia.hastaKm }
+            : null;
+        })(),
         fotos: fotosArray,
       });
 
@@ -715,6 +731,28 @@ export const RecepcionWizardModal: React.FC<RecepcionWizardModalProps> = ({
                   </div>
                 )}
               </div>
+              {garantiasDelVehiculo.length > 0 && (
+                <div className="bg-emerald-50 border border-emerald-300 rounded-xl p-3 space-y-2 text-xs text-emerald-950">
+                  <p className="font-bold flex items-center gap-1.5 text-sm">
+                    <ShieldCheck className="w-4 h-4 text-emerald-700" /> Este vehículo tiene garantía vigente
+                  </p>
+                  {garantiasDelVehiculo.map((g) => (
+                    <label key={g.orden.id} className="flex items-start gap-2 bg-white/70 border border-emerald-200 rounded-lg p-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        className="mt-0.5"
+                        checked={reclamoDe === g.orden.id}
+                        onChange={(e) => setReclamoDe(e.target.checked ? g.orden.id : '')}
+                      />
+                      <span>
+                        <b>{g.orden.folio}</b>: {textoGarantia(g.garantia)}
+                        <span className="block text-emerald-800">Cubre: {trabajosCubiertos(g.orden)}</span>
+                        <span className="block font-semibold">Marcar si el cliente vuelve por un problema de ese trabajo (reclamo de garantía).</span>
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 

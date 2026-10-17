@@ -979,6 +979,7 @@ export interface NuevaOrdenInput {
   daniosCarroceria: OrdenServicio['daniosCarroceria'];
   accesorios: OrdenServicio['accesorios'];
   autorizaciones: OrdenServicio['autorizaciones'];
+  reclamoGarantia?: OrdenServicio['reclamoGarantia'];
   fotos: {
     tipo: FotoOrden['tipo'];
     titulo: string;
@@ -1061,6 +1062,7 @@ export async function crearOrdenRecepcionFirestore(
     daniosCarroceria: input.daniosCarroceria,
     accesorios: input.accesorios,
     autorizaciones: input.autorizaciones,
+    reclamoGarantia: input.reclamoGarantia || null,
 
     firmaSubida: false,
     firmaFotoId: null,

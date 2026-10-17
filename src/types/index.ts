@@ -425,6 +425,10 @@ export interface OrdenServicio {
   cancelacion?: CancelacionOrden | null;
   correcciones?: CorreccionOrden[];
 
+  // Garantía del trabajo (se fija al entregar) y reclamo de garantía (al recibir)
+  garantia?: GarantiaOrden | null;
+  reclamoGarantia?: ReclamoGarantia | null;
+
   // Metadatos
   creadoPorUid: string;
   creadoPorEmail: string;
@@ -433,6 +437,22 @@ export interface OrdenServicio {
   createdAt: FechaFS;
   updatedAt: FechaFS;
   fechaCreacion?: any; // Firestore serverTimestamp
+}
+
+export interface GarantiaOrden {
+  meses: number; // 0 = sin límite por tiempo
+  km: number; // 0 = sin límite por kilometraje
+  desde: string; // ISO (fecha de entrega)
+  kmDesde: number;
+  hastaFecha: string | null; // ISO
+  hastaKm: number | null;
+}
+
+export interface ReclamoGarantia {
+  ordenOrigenId: string;
+  folioOrigen: string;
+  hastaFecha: string | null;
+  hastaKm: number | null;
 }
 
 export interface ContadorFolios {
@@ -528,6 +548,10 @@ export interface TallerConfig {
   plantillasWhatsapp?: Partial<Record<ClavePlantillaWhatsapp, string>>;
   textosLegales?: Partial<Record<ClaveTextoLegal, string>>;
   minutosInactividad?: number; // cierre de sesión automático (0 = nunca)
+
+  // Garantía por defecto al entregar
+  garantiaMesesDefecto?: number;
+  garantiaKmDefecto?: number;
 
   auditoriaId?: string; // ID de auditoría atómica vinculada
 }
@@ -850,6 +874,7 @@ export interface ActaEntrega {
   firmaSubida: boolean;
   firmaFotoId?: string | null;
   registradoPorNombre: string;
+  garantia?: GarantiaOrden | null;
 }
 
 export type MotivoCancelacion =

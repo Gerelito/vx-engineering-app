@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import {
   Wrench,
@@ -11,11 +11,13 @@ import {
   LayoutGrid,
   Wallet,
   KeyRound,
+  BarChart3,
+  Download,
 } from 'lucide-react';
 
 interface NavbarProps {
-  vistaActiva: 'recepciones' | 'taller' | 'entregas' | 'caja' | 'clientes' | 'vehiculos' | 'auditoria';
-  onCambiarVista: (vista: 'recepciones' | 'taller' | 'entregas' | 'caja' | 'clientes' | 'vehiculos' | 'auditoria') => void;
+  vistaActiva: 'recepciones' | 'taller' | 'entregas' | 'caja' | 'clientes' | 'vehiculos' | 'reportes' | 'auditoria';
+  onCambiarVista: (vista: 'recepciones' | 'taller' | 'entregas' | 'caja' | 'clientes' | 'vehiculos' | 'reportes' | 'auditoria') => void;
   onNuevaRecepcion: () => void;
   onNuevoCliente: () => void;
   onNuevoVehiculo: () => void;
@@ -36,9 +38,23 @@ export const Navbar: React.FC<NavbarProps> = ({
 }) => {
   const { usuarioActual, cerrarSesion } = useAuth();
   const [modalConfirmarLogout, setModalConfirmarLogout] = useState(false);
+  const [instalar, setInstalar] = useState<any>(null);
+  useEffect(() => {
+    const ofrecer = (e: Event) => {
+      e.preventDefault();
+      setInstalar(e);
+    };
+    const instalada = () => setInstalar(null);
+    window.addEventListener('beforeinstallprompt', ofrecer);
+    window.addEventListener('appinstalled', instalada);
+    return () => {
+      window.removeEventListener('beforeinstallprompt', ofrecer);
+      window.removeEventListener('appinstalled', instalada);
+    };
+  }, []);
 
   const navItems: {
-    id: 'recepciones' | 'taller' | 'entregas' | 'caja' | 'clientes' | 'vehiculos' | 'auditoria';
+    id: 'recepciones' | 'taller' | 'entregas' | 'caja' | 'clientes' | 'vehiculos' | 'reportes' | 'auditoria';
     label: string;
     icon: React.ReactNode;
   }[] = [
@@ -71,6 +87,11 @@ export const Navbar: React.FC<NavbarProps> = ({
       id: 'vehiculos',
       label: 'Vehículos',
       icon: <Car className="w-4 h-4 text-slate-500 shrink-0" />,
+    },
+    {
+      id: 'reportes',
+      label: 'Reportes',
+      icon: <BarChart3 className="w-4 h-4 text-amber-600 shrink-0" />,
     },
     {
       id: 'auditoria',
@@ -162,6 +183,22 @@ export const Navbar: React.FC<NavbarProps> = ({
                   {usuarioActual.displayName}
                 </span>
               </div>
+            )}
+
+            {/* Instalar como app (Android / PC con Chrome o Edge) */}
+            {instalar && (
+              <button
+                onClick={async () => {
+                  const ev = instalar;
+                  setInstalar(null);
+                  await ev.prompt();
+                }}
+                className="flex items-center gap-1 p-1.5 sm:px-2.5 sm:py-2 text-xs font-bold text-slate-900 bg-amber-400 hover:bg-amber-300 rounded-lg transition-colors cursor-pointer"
+                title="Instalar la app en este dispositivo"
+              >
+                <Download className="w-4 h-4" />
+                <span className="hidden sm:inline">Instalar app</span>
+              </button>
             )}
 
             {/* Configuración */}
