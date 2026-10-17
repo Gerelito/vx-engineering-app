@@ -1,0 +1,6 @@
+{
+  "summary": "Plan de implementación actualizado a arquitectura Firebase en la nube (Firestore, Firebase Auth, Cloud Storage, Cloud Functions), incorporando respaldos dobles de datos y storage con confirmación doble y prueba previa en copia, auditoría escrita exclusivamente por Cloud Functions del servidor (cliente sin permisos de escritura en /auditoria), colección pública aislada /verificaciones/{token} para QR, cola offline IndexedDB para fotos y folios provisionales, acceso restringido exclusivo a los 3 dueños, alerta de presupuesto de US$2 y dominio configurable. Módulo 1 listo para construcción.",
+  "updatedAt": "2026-10-15T02:13:30.199209415Z",
+  "requestFeedback": true,
+  "userFacing": true
+}

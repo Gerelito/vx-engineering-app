@@ -1,0 +1,171 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper: usuario autenticado con correo
+    function isSignedIn() {
+      return request.auth != null && request.auth.token.email != null;
+    }
+
+    // Helper: correo electrónico del usuario en minúsculas
+    function userEmail() {
+      return request.auth.token.email.lower();
+    }
+
+    // Helper: verificar si el usuario es uno de los dueños autorizados en /config/acceso
+    function isDueno() {
+      return isSignedIn() &&
+        exists(/databases/$(database)/documents/config/acceso) &&
+        userEmail() in get(/databases/$(database)/documents/config/acceso).data.duenos;
+    }
+
+    // Helper: Validar que la escritura incluye auditoriaId apuntando a un evento
+    // inmutable de auditoría creado en el MISMO batch por el dueño autenticado,
+    // garantizando correspondencia estricta de entidad y ID del documento intervenido.
+    function hasValidAudit(entidadEsperada, targetDocId) {
+      return request.resource.data.auditoriaId is string &&
+        request.resource.data.auditoriaId.size() > 0 &&
+        !exists(/databases/$(database)/documents/auditoria/$(request.resource.data.auditoriaId)) &&
+        existsAfter(/databases/$(database)/documents/auditoria/$(request.resource.data.auditoriaId)) &&
+        (
+          getAfter(/databases/$(database)/documents/auditoria/$(request.resource.data.auditoriaId)).data.usuarioEmail == request.auth.token.email ||
+          getAfter(/databases/$(database)/documents/auditoria/$(request.resource.data.auditoriaId)).data.usuarioEmail == userEmail()
+        ) &&
+        getAfter(/databases/$(database)/documents/auditoria/$(request.resource.data.auditoriaId)).data.usuarioUid == request.auth.uid &&
+        (
+          getAfter(/databases/$(database)/documents/auditoria/$(request.resource.data.auditoriaId)).data.entidad == entidadEsperada ||
+          (entidadEsperada == 'configuracion' && getAfter(/databases/$(database)/documents/auditoria/$(request.resource.data.auditoriaId)).data.entidad in ['configuracion', 'config', 'taller']) ||
+          (entidadEsperada == 'acceso' && getAfter(/databases/$(database)/documents/auditoria/$(request.resource.data.auditoriaId)).data.entidad in ['acceso', 'configuracion']) ||
+          (entidadEsperada == 'clientes' && getAfter(/databases/$(database)/documents/auditoria/$(request.resource.data.auditoriaId)).data.entidad in ['clientes', 'archivos']) ||
+          (entidadEsperada == 'archivos' && getAfter(/databases/$(database)/documents/auditoria/$(request.resource.data.auditoriaId)).data.entidad in ['archivos', 'clientes']) ||
+          (entidadEsperada == 'ordenes' && getAfter(/databases/$(database)/documents/auditoria/$(request.resource.data.auditoriaId)).data.entidad in ['ordenes', 'fotos']) ||
+          (entidadEsperada == 'fotos' && getAfter(/databases/$(database)/documents/auditoria/$(request.resource.data.auditoriaId)).data.entidad in ['fotos', 'ordenes']) ||
+          (entidadEsperada == 'contadores' && getAfter(/databases/$(database)/documents/auditoria/$(request.resource.data.auditoriaId)).data.entidad in ['contadores', 'ordenes']) ||
+          (entidadEsperada == 'cotizaciones' && getAfter(/databases/$(database)/documents/auditoria/$(request.resource.data.auditoriaId)).data.entidad in ['cotizaciones', 'ordenes']) ||
+          (entidadEsperada == 'plantillas' && getAfter(/databases/$(database)/documents/auditoria/$(request.resource.data.auditoriaId)).data.entidad in ['plantillas', 'configuracion'])
+        ) &&
+        getAfter(/databases/$(database)/documents/auditoria/$(request.resource.data.auditoriaId)).data.entidadId == targetDocId;
+    }
+
+    // Configuración de acceso: solo dueños pueden leer y actualizar (máx 3 dueños, mín 1)
+    // Excepción de primer arranque: crear cuando NO existe y duenos == [email del primer usuario]
+    // Actualización exige validación de auditoría atómica
+    // Prohibido borrar
+    match /config/acceso {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() &&
+        !exists(/databases/$(database)/documents/config/acceso) &&
+        request.resource.data.duenos == [userEmail()];
+      allow update: if isDueno() &&
+        request.resource.data.duenos is list &&
+        request.resource.data.duenos.size() >= 1 &&
+        request.resource.data.duenos.size() <= 3 &&
+        hasValidAudit('acceso', 'acceso');
+      allow delete: if false;
+    }
+
+    // Configuración general y de taller (/config/{docId} excepto acceso)
+    // Prohibido borrar cualquier documento de /config
+    match /config/{docId} {
+      allow read: if isDueno() && docId != 'acceso';
+      allow create, update: if isDueno() && docId != 'acceso' && hasValidAudit('configuracion', docId);
+      allow delete: if false;
+    }
+
+    // Clientes: lectura, creación y edición por dueños con auditoría atómica obligatoria. Prohibido borrar
+    match /clientes/{clienteId} {
+      allow read: if isDueno();
+      allow create, update: if isDueno() && hasValidAudit('clientes', clienteId);
+      allow delete: if false;
+
+      // Subcolección de fotos y documentos del cliente: Prohibido borrar
+      match /archivos/{archivoId} {
+        allow read: if isDueno();
+        allow create, update: if isDueno() && hasValidAudit('archivos', archivoId);
+        allow delete: if false;
+      }
+    }
+
+    // Vehículos: lectura, creación y edición por dueños con auditoría atómica obligatoria. Prohibido borrar
+    match /vehiculos/{vehiculoId} {
+      allow read: if isDueno();
+      allow create, update: if isDueno() && hasValidAudit('vehiculos', vehiculoId);
+      allow delete: if false;
+    }
+
+    // Órdenes de servicio: creación y edición por dueños con auditoría obligatoria. Prohibido borrar
+    match /ordenes/{ordenId} {
+      allow read: if isDueno();
+      allow create, update: if isDueno() && hasValidAudit('ordenes', ordenId);
+      allow delete: if false;
+
+      // Subcolección de fotos de la orden (inspección y firma): Prohibido borrar
+      match /fotos/{fotoId} {
+        allow read: if isDueno();
+        allow create, update: if isDueno() && hasValidAudit('fotos', fotoId);
+        allow delete: if false;
+      }
+
+      // Subcolección de cotizaciones de la orden (/ordenes/{ordenId}/cotizaciones/{cotizacionId})
+      match /cotizaciones/{cotizacionId} {
+        allow read: if isDueno();
+        allow create, update: if isDueno() && hasValidAudit('cotizaciones', cotizacionId);
+        allow delete: if false;
+      }
+    }
+
+    // Plantillas de servicios frecuentes: Prohibido borrar
+    match /plantillas/{plantillaId} {
+      allow read: if isDueno();
+      allow create, update: if isDueno() && hasValidAudit('plantillas', plantillaId);
+      allow delete: if false;
+    }
+
+    // Contadores correlativos para folios oficiales de órdenes (OS-000001...)
+    // Solo se permite incrementar 'ultimo' en exactamente 1
+    match /contadores/{contadorId} {
+      allow read: if isDueno();
+      allow create: if isDueno() &&
+        contadorId == 'ordenes' &&
+        request.resource.data.ultimo == 1;
+      allow update: if isDueno() &&
+        contadorId == 'ordenes' &&
+        request.resource.data.ultimo == resource.data.ultimo + 1;
+      allow delete: if false;
+    }
+
+    // Auditoría inmutable obligatoria:
+    // Solo lectura por dueños
+    // Solo creación en el mismo batch con datos verificados: UID, server timestamp (request.time), email y tipos string
+    // Modificación y borrado absolutamente prohibidos
+    match /auditoria/{auditoriaId} {
+      allow read: if isDueno();
+      allow create: if isDueno() &&
+        request.resource.data.usuarioUid == request.auth.uid &&
+        request.resource.data.fecha == request.time &&
+        (
+          request.resource.data.usuarioEmail == request.auth.token.email ||
+          request.resource.data.usuarioEmail == userEmail()
+        ) &&
+        request.resource.data.modulo is string &&
+        request.resource.data.modulo.size() > 0 &&
+        request.resource.data.accion is string &&
+        request.resource.data.accion.size() > 0 &&
+        request.resource.data.entidad is string &&
+        request.resource.data.entidad.size() > 0;
+      allow update, delete: if false;
+    }
+
+    // Colección pública para verificación QR del cliente final (Módulo 7)
+    match /verificaciones/{codigo} {
+      allow read: if true;
+      allow create, update: if isDueno();
+      allow delete: if false;
+    }
+
+    // Por defecto denegar todo lo demás
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

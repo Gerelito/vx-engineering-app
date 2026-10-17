@@ -1,0 +1,6 @@
+{
+  "name": "Taller Mecánico Automotriz",
+  "description": "Sistema integral de gestión de taller mecánico automotriz en Bolivia: recepción, inspección visual, cotizaciones, órdenes de servicio y seguimiento con verificación QR.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

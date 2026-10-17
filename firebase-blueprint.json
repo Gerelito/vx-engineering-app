@@ -1,0 +1,90 @@
+{
+  "entities": {
+    "cliente": {
+      "title": "Cliente",
+      "description": "Ficha del cliente titular o empresa del taller mecánico",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Identificador único del cliente" },
+        "nombre": { "type": "string", "description": "Nombre completo del cliente o razón social" },
+        "telefono": { "type": "string", "description": "Teléfono de contacto para WhatsApp y control de duplicados" },
+        "documentoIdentidad": { "type": "string", "description": "Cédula de identidad con extensión (LP, SC, CB) o NIT" },
+        "correo": { "type": "string", "description": "Correo electrónico opcional del cliente" },
+        "direccion": { "type": "string", "description": "Dirección física opcional" },
+        "canalPreferido": { "type": "string", "enum": ["WhatsApp", "Llamada"], "description": "Canal preferido de comunicación" },
+        "tipo": { "type": "string", "enum": ["particular", "empresa"], "description": "Tipo de cliente" },
+        "origen": { "type": "string", "description": "Origen del cliente (referido, redes, calle, etc.)" },
+        "consentimientoFirmado": { "type": "boolean", "description": "Indica si ya se subió el consentimiento de datos firmado" },
+        "consentimientoDocUrl": { "type": "string", "description": "URL o base64 del documento escaneado/fotografiado" },
+        "consentimientoFecha": { "type": "string", "description": "Fecha y hora en que se subió el consentimiento" },
+        "consentimientoUsuarioId": { "type": "string", "description": "Usuario que subió el consentimiento" },
+        "esProvisional": { "type": "boolean", "description": "Marca si fue creado sin conexión pendiente de sincronizar" },
+        "notas": { "type": "string", "description": "Notas u observaciones sobre el cliente" },
+        "createdAt": { "type": "string", "description": "Fecha de registro ISO" },
+        "updatedAt": { "type": "string", "description": "Fecha de última modificación ISO" }
+      },
+      "required": ["nombre", "telefono"]
+    },
+    "vehiculo": {
+      "title": "Vehiculo",
+      "description": "Ficha técnica y hoja de vida del vehículo",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Identificador único del vehículo" },
+        "placa": { "type": "string", "description": "Placa en texto libre para placas nacionales, antiguas o extranjeras" },
+        "vin": { "type": "string", "description": "Número de chasis o VIN (17 caracteres si se ingresa)" },
+        "marca": { "type": "string", "description": "Marca del vehículo (ej. Toyota, Nissan)" },
+        "modelo": { "type": "string", "description": "Modelo del vehículo (ej. Hilux, Corolla)" },
+        "version": { "type": "string", "description": "Versión técnica o nivel de equipamiento" },
+        "anio": { "type": "string", "description": "Año de fabricación" },
+        "color": { "type": "string", "description": "Color de carrocería" },
+        "cilindrada": { "type": "string", "description": "Cilindrada del motor (ej. 2.4, 1800cc)" },
+        "combustible": { "type": "string", "enum": ["Gasolina", "Diésel", "GNV", "Híbrido", "Eléctrico"], "description": "Tipo de combustible" },
+        "transmision": { "type": "string", "enum": ["Manual", "Automática", "Secuencial"], "description": "Tipo de transmisión" },
+        "traccion": { "type": "string", "enum": ["4x2", "4x4", "AWD"], "description": "Tipo de tracción" },
+        "vencimientoSoat": { "type": "string", "description": "Fecha de vencimiento del SOAT (dd/mm/aaaa)" },
+        "vencimientoItv": { "type": "string", "description": "Fecha de vencimiento de la Inspección Técnica Vehicular" },
+        "propietarioActualId": { "type": "string", "description": "ID del cliente propietario actual" },
+        "historialPropietarios": { "type": "string", "description": "JSON serializado con el historial de propietarios previos" },
+        "ultimoKilometraje": { "type": "string", "description": "Último kilometraje registrado" },
+        "createdAt": { "type": "string", "description": "Fecha de registro ISO" },
+        "updatedAt": { "type": "string", "description": "Fecha de última modificación ISO" }
+      },
+      "required": ["placa", "marca", "modelo"]
+    },
+    "auditoria": {
+      "title": "Auditoria",
+      "description": "Registro inmutable de auditoría para cada acción y cambio",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "ID único del registro de auditoría" },
+        "fechaHora": { "type": "string", "description": "Fecha y hora del evento" },
+        "usuarioId": { "type": "string", "description": "ID del usuario que ejecutó la acción" },
+        "usuarioNombre": { "type": "string", "description": "Nombre del usuario" },
+        "modulo": { "type": "string", "description": "Módulo afectado (Clientes, Recepción, etc.)" },
+        "accion": { "type": "string", "description": "Crear, Modificar, Eliminar, etc." },
+        "registroId": { "type": "string", "description": "ID del registro afectado" },
+        "valorAnterior": { "type": "string", "description": "Valor o estado previo" },
+        "valorNuevo": { "type": "string", "description": "Valor o estado nuevo" },
+        "fotoAnteriorUrl": { "type": "string", "description": "Foto previa en caso de sustitución" },
+        "esSensible": { "type": "boolean", "description": "Indica si es una acción sensible destacada" },
+        "dispositivo": { "type": "string", "description": "Tipo de dispositivo o IP" }
+      },
+      "required": ["fechaHora", "usuarioNombre", "modulo", "accion"]
+    }
+  },
+  "firestore": {
+    "/clientes/{clienteId}": {
+      "schema": "cliente",
+      "description": "Fichas de clientes del taller"
+    },
+    "/vehiculos/{vehiculoId}": {
+      "schema": "vehiculo",
+      "description": "Fichas de vehículos y propietarios"
+    },
+    "/auditoria/{auditoriaId}": {
+      "schema": "auditoria",
+      "description": "Bitácora inmutable de auditoría"
+    }
+  }
+}
