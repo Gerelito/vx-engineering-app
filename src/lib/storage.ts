@@ -295,7 +295,15 @@ export async function inicializarOComprobarAcceso(dueno: DuenoUsuario): Promise<
   primerArranqueRealizado: boolean;
 }> {
   const ref = doc(db, 'config', 'acceso');
-  const snap = await getDoc(ref);
+  let snap;
+  try {
+    snap = await getDoc(ref);
+  } catch (e: any) {
+    // Justo después de entrar con Google, Firestore a veces recibe la consulta antes que el token: reintentar.
+    if (e?.code !== 'permission-denied') throw e;
+    await new Promise((r) => setTimeout(r, 1500));
+    snap = await getDoc(ref);
+  }
 
   const miEmail = dueno.email.toLowerCase().trim();
 
