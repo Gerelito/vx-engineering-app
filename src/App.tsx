@@ -951,7 +951,7 @@ function TallerAppContent() {
       <footer className="border-t border-slate-200 bg-white py-4 mt-12 text-center text-xs text-slate-400">
         <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
           <span>{config.nombre || 'VX Engineering'} · Bolivia · 100% Plan Gratuito</span>
-          <span>Firestore ai-studio-65e0c1e2-0a62-4c89-8659-5972c9333b3f · 3 dueños en /config/acceso</span>
+          <span>Datos en Firebase (plan gratuito) · máximo 3 dueños</span>
         </div>
       </footer>
 
