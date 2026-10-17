@@ -25,6 +25,7 @@ import {
   ArrowRight,
   Plus,
   DollarSign,
+  Wallet,
 } from 'lucide-react';
 import { estaVigente, textoGarantia } from '../../lib/garantia';
 import { ESTILOS_ESTADO, obtenerSiguientesEstadosPermitidos } from '../../lib/estadosTaller';
@@ -44,6 +45,7 @@ interface DetalleOrdenModalProps {
   onAbrirTareas?: (orden: OrdenServicio) => void;
   onAbrirTrabajoAdicional?: (orden: OrdenServicio) => void;
   onAbrirCotizacion?: (orden: OrdenServicio) => void;
+  onAbrirPagos?: (orden: OrdenServicio) => void;
   onAbrirAprobacion?: (orden: OrdenServicio) => void;
   onAbrirImprimirCotizacion?: (orden: OrdenServicio) => void;
   usuarioActual?: DuenoUsuario | null;
@@ -63,6 +65,7 @@ export const DetalleOrdenModal: React.FC<DetalleOrdenModalProps> = ({
   onAbrirTareas,
   onAbrirTrabajoAdicional,
   onAbrirCotizacion,
+  onAbrirPagos,
   onAbrirAprobacion,
   onAbrirImprimirCotizacion,
   usuarioActual,
@@ -216,6 +219,18 @@ export const DetalleOrdenModal: React.FC<DetalleOrdenModalProps> = ({
                 title="Ver o editar cotizaciones"
               >
                 <span>Cotización</span>
+              </button>
+            )}
+
+            {onAbrirPagos && (
+              <button
+                type="button"
+                onClick={() => onAbrirPagos(orden)}
+                className="px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 text-emerald-950 rounded-lg text-xs font-bold flex items-center gap-1 cursor-pointer"
+                title="Registrar o ver pagos de esta orden"
+              >
+                <Wallet className="w-3.5 h-3.5 text-emerald-700" />
+                <span>Pagos</span>
               </button>
             )}
 

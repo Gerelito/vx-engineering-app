@@ -299,7 +299,7 @@ export const ConfiguracionModal: React.FC<ConfiguracionModalProps> = ({
         <div className="bg-slate-100 border-b border-slate-200 px-4 flex items-center gap-1 overflow-x-auto scrollbar-none py-1.5 shrink-0">
           <button
             type="button"
-            onClick={() => setTabActiva('dueños')}
+            onClick={(e) => { setTabActiva('dueños'); e.currentTarget.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' }); }}
             className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap cursor-pointer transition-colors ${
               tabActiva === 'dueños'
                 ? 'bg-slate-900 text-white font-bold'
@@ -310,7 +310,7 @@ export const ConfiguracionModal: React.FC<ConfiguracionModalProps> = ({
           </button>
           <button
             type="button"
-            onClick={() => setTabActiva('taller')}
+            onClick={(e) => { setTabActiva('taller'); e.currentTarget.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' }); }}
             className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap cursor-pointer transition-colors ${
               tabActiva === 'taller'
                 ? 'bg-slate-900 text-white font-bold'
@@ -321,7 +321,7 @@ export const ConfiguracionModal: React.FC<ConfiguracionModalProps> = ({
           </button>
           <button
             type="button"
-            onClick={() => setTabActiva('operacion')}
+            onClick={(e) => { setTabActiva('operacion'); e.currentTarget.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' }); }}
             className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap cursor-pointer transition-colors ${
               tabActiva === 'operacion'
                 ? 'bg-slate-900 text-white font-bold'
@@ -332,7 +332,7 @@ export const ConfiguracionModal: React.FC<ConfiguracionModalProps> = ({
           </button>
           <button
             type="button"
-            onClick={() => setTabActiva('tarifario')}
+            onClick={(e) => { setTabActiva('tarifario'); e.currentTarget.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' }); }}
             className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap cursor-pointer transition-colors ${
               tabActiva === 'tarifario'
                 ? 'bg-slate-900 text-white font-bold'
@@ -352,7 +352,7 @@ export const ConfiguracionModal: React.FC<ConfiguracionModalProps> = ({
             <button
               key={id}
               type="button"
-              onClick={() => setTabActiva(id)}
+              onClick={(e) => { setTabActiva(id); e.currentTarget.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' }); }}
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap cursor-pointer transition-colors ${
                 tabActiva === id ? 'bg-slate-900 text-white font-bold' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200'
               }`}
@@ -742,7 +742,7 @@ export const ConfiguracionModal: React.FC<ConfiguracionModalProps> = ({
                   </h3>
                 </div>
                 <p className="text-xs text-rose-900">
-                  Especificación v1.2: Cuando una orden supera estos límites en el taller, se resalta automáticamente en color rojo.
+                  Cuando una orden supera estos límites en el taller, se resalta automáticamente en color rojo.
                 </p>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">

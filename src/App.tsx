@@ -1058,6 +1058,7 @@ function TallerAppContent() {
           setOrdenParaTrabajoAdicional(ord);
         }}
         onAbrirCotizacion={(ord) => setOrdenParaCotizacion(ord)}
+        onAbrirPagos={(ord) => setOrdenPagosId(ord.id)}
         onAbrirAprobacion={async (ord) => {
           try {
             const cots = await obtenerCotizacionesOrdenFirestore(ord.id);
