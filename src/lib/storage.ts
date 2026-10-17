@@ -18,7 +18,7 @@ import {
   PlantillaCotizacion,
   RegistroAprobacionCliente,
 } from '../types';
-import { db } from './firebase';
+import { auth, db } from './firebase';
 import { sincronizarVerificacion } from './verificacion';
 import {
   doc,
@@ -327,14 +327,18 @@ export async function inicializarOComprobarAcceso(dueno: DuenoUsuario): Promise<
   primerArranqueRealizado: boolean;
 }> {
   const ref = doc(db, 'config', 'acceso');
+  // Justo después de entrar con Google, Firestore a veces recibe la consulta antes que el permiso:
+  // se renueva el permiso y se reintenta hasta 5 veces (1 a 5 s).
   let snap;
-  try {
-    snap = await getDoc(ref);
-  } catch (e: any) {
-    // Justo después de entrar con Google, Firestore a veces recibe la consulta antes que el token: reintentar.
-    if (e?.code !== 'permission-denied') throw e;
-    await new Promise((r) => setTimeout(r, 1500));
-    snap = await getDoc(ref);
+  for (let intento = 1; ; intento++) {
+    try {
+      snap = await getDoc(ref);
+      break;
+    } catch (e: any) {
+      if (e?.code !== 'permission-denied' || intento >= 5) throw e;
+      await new Promise((r) => setTimeout(r, intento * 1000));
+      await auth.currentUser?.getIdToken(true).catch(() => undefined);
+    }
   }
 
   const miEmail = dueno.email.toLowerCase().trim();

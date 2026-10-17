@@ -40,6 +40,15 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen }) => {
               >
                 Intentar con otra cuenta de Google
               </button>
+              {/No se pudo verificar/.test(errorAcceso) && (
+                <button
+                  type="button"
+                  onClick={() => window.location.reload()}
+                  className="mt-2 ml-3 text-[11px] font-semibold text-red-700 hover:text-red-900 underline"
+                >
+                  Reintentar
+                </button>
+              )}
             </div>
           </div>
         )}
