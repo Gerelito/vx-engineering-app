@@ -263,15 +263,18 @@ export const RecepcionWizardModal: React.FC<RecepcionWizardModalProps> = ({
     }
   }, [clienteSeleccionadoId, vehiculoSeleccionadoId, vehiculos]);
 
+  // Garantías vigentes del vehículo elegido (los hooks van antes de cualquier "return")
+  useEffect(() => setReclamoDe(''), [vehiculoSeleccionadoId, isOpen]);
+  const garantiasDelVehiculo = useMemo(() => {
+    if (!vehiculoSeleccionadoId) return [];
+    const v = vehiculos.find((x) => x.id === vehiculoSeleccionadoId);
+    return garantiasVigentes(ordenes, vehiculoSeleccionadoId, v?.ultimoKilometraje);
+  }, [ordenes, vehiculos, vehiculoSeleccionadoId]);
+
   if (!isOpen) return null;
 
   const clienteActual = clientes.find((c) => c.id === clienteSeleccionadoId);
   const vehiculoActual = vehiculos.find((v) => v.id === vehiculoSeleccionadoId);
-  useEffect(() => setReclamoDe(''), [vehiculoSeleccionadoId, isOpen]);
-  const garantiasDelVehiculo = useMemo(
-    () => (vehiculoSeleccionadoId ? garantiasVigentes(ordenes, vehiculoSeleccionadoId, vehiculoActual?.ultimoKilometraje) : []),
-    [ordenes, vehiculoSeleccionadoId, vehiculoActual?.ultimoKilometraje]
-  );
 
   // Vehículos del cliente seleccionado
   const vehiculosDelCliente = clienteSeleccionadoId
