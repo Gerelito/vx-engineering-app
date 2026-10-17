@@ -9,11 +9,12 @@ import {
   Settings,
   ClipboardList,
   LayoutGrid,
+  Wallet,
 } from 'lucide-react';
 
 interface NavbarProps {
-  vistaActiva: 'recepciones' | 'taller' | 'clientes' | 'vehiculos' | 'auditoria';
-  onCambiarVista: (vista: 'recepciones' | 'taller' | 'clientes' | 'vehiculos' | 'auditoria') => void;
+  vistaActiva: 'recepciones' | 'taller' | 'caja' | 'clientes' | 'vehiculos' | 'auditoria';
+  onCambiarVista: (vista: 'recepciones' | 'taller' | 'caja' | 'clientes' | 'vehiculos' | 'auditoria') => void;
   onNuevaRecepcion: () => void;
   onNuevoCliente: () => void;
   onNuevoVehiculo: () => void;
@@ -36,7 +37,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   const [modalConfirmarLogout, setModalConfirmarLogout] = useState(false);
 
   const navItems: {
-    id: 'recepciones' | 'taller' | 'clientes' | 'vehiculos' | 'auditoria';
+    id: 'recepciones' | 'taller' | 'caja' | 'clientes' | 'vehiculos' | 'auditoria';
     label: string;
     icon: React.ReactNode;
   }[] = [
@@ -49,6 +50,11 @@ export const Navbar: React.FC<NavbarProps> = ({
       id: 'taller',
       label: 'Taller (Kanban)',
       icon: <Wrench className="w-4 h-4 text-blue-500 shrink-0" />,
+    },
+    {
+      id: 'caja',
+      label: 'Caja',
+      icon: <Wallet className="w-4 h-4 text-emerald-600 shrink-0" />,
     },
     {
       id: 'clientes',

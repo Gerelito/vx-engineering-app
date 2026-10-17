@@ -134,6 +134,35 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    // Módulo 5: pagos. Solo se crean (nunca se editan ni se borran; una anulación es un
+    // movimiento negativo nuevo). No se aceptan pagos de un día con la caja cerrada.
+    match /pagos/{pagoId} {
+      allow read: if isDueno();
+      allow create: if isDueno() &&
+        hasValidAudit('pagos', pagoId) &&
+        request.resource.data.registradoPorUid == request.auth.uid &&
+        request.resource.data.fechaDia is string &&
+        (
+          !exists(/databases/$(database)/documents/cajas/$(request.resource.data.fechaDia)) ||
+          get(/databases/$(database)/documents/cajas/$(request.resource.data.fechaDia)).data.cerrado == false
+        );
+      allow update, delete: if false;
+    }
+
+    // Bitácora de contactos con clientes: solo se agregan registros
+    match /contactos/{contactoId} {
+      allow read: if isDueno();
+      allow create: if isDueno() && hasValidAudit('contactos', contactoId);
+      allow update, delete: if false;
+    }
+
+    // Cierres de caja diarios (id = aaaa-mm-dd). Reabrir exige auditoría (acción sensible).
+    match /cajas/{dia} {
+      allow read: if isDueno();
+      allow create, update: if isDueno() && hasValidAudit('cajas', dia);
+      allow delete: if false;
+    }
+
     // Auditoría inmutable obligatoria:
     // Solo lectura por dueños
     // Solo creación en el mismo batch con datos verificados: UID, server timestamp (request.time), email y tipos string

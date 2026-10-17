@@ -32,6 +32,7 @@ import {
   Eye,
   Calendar,
   FileText,
+  Wallet,
 } from 'lucide-react';
 
 interface TableroKanbanProps {
@@ -44,6 +45,7 @@ interface TableroKanbanProps {
   onAbrirDetalle: (orden: OrdenServicio) => void;
   onAbrirCotizacion?: (orden: OrdenServicio) => void;
   onAbrirAprobacion?: (orden: OrdenServicio) => void;
+  onAbrirPagos?: (orden: OrdenServicio) => void;
   onNuevaRecepcion: () => void;
   onAsignarBahiaYResponsable: (
     orden: OrdenServicio,
@@ -73,6 +75,7 @@ export const TableroKanban: React.FC<TableroKanbanProps> = ({
   onAbrirDetalle,
   onAbrirCotizacion,
   onAbrirAprobacion,
+  onAbrirPagos,
   onNuevaRecepcion,
   onAsignarBahiaYResponsable,
 }) => {
@@ -547,6 +550,19 @@ export const TableroKanban: React.FC<TableroKanbanProps> = ({
                               >
                                 <FileText className="w-3 h-3 text-amber-700" />
                                 <span>Cotización</span>
+                              </button>
+                            )}
+
+                            {/* Pagos (Módulo 5) */}
+                            {onAbrirPagos && (
+                              <button
+                                type="button"
+                                onClick={() => onAbrirPagos(ord)}
+                                className="flex items-center gap-1 px-2 py-1 rounded text-[11px] font-bold bg-emerald-50 text-emerald-900 border border-emerald-300 hover:bg-emerald-100 transition-colors cursor-pointer"
+                                title="Registrar pagos, anticipos y abonos"
+                              >
+                                <Wallet className="w-3 h-3 text-emerald-700" />
+                                <span>Pagos</span>
                               </button>
                             )}
 

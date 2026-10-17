@@ -46,22 +46,13 @@ export const DEFAULT_CONFIG: TallerConfig = {
   margenMinimoPorcentaje: 25,
   vigenciaCotizacionDias: 7,
   alertaPresupuestoPorcentaje: 15,
-  dominioVerificacionQr: 'https://ais-dev-dxyrnbayf3fizoo3pvxhgv-236028129981.us-west1.run.app',
+  dominioVerificacionQr: 'https://gerelito.github.io/vx-engineering-app',
+  mediosPago: ['QR', 'Efectivo'],
 
   // Módulo 3: Bahías, Mecánicos responsables, Tarifario estándar y Límites de alerta
-  bahiasDisponibles: [
-    'Bahía 1 (Elevador 1)',
-    'Bahía 2 (Elevador 2)',
-    'Bahía 3 (Fosa / Alineación)',
-    'Bahía 4 (Diagnóstico Eléctrico)',
-    'Bahía 5 (Mantenimiento Rápido)',
-  ],
-  mecanicosResponsables: [
-    'Carlos Mamani (Jefe Taller)',
-    'Rodrigo Quispe (Mecánico Senior)',
-    'Javier Flores (Electricista / Escáner)',
-    'Marcelo Condori (Frenos y Suspensión)',
-  ],
+  bahiasDisponibles: ['Bahía 1', 'Bahía 2', 'Bahía 3'],
+  // Los responsables reales los cargan los dueños en Configuración
+  mecanicosResponsables: [],
   trabajosTarifario: [
     { id: 'tar_1', trabajo: 'Cambio de aceite y filtro motor', horasEstandar: 0.75 },
     { id: 'tar_2', trabajo: 'Cambio de pastillas y discos delanteros', horasEstandar: 1.5 },
@@ -1988,6 +1979,9 @@ export async function guardarCotizacionFirestore(
   const ordenUpdate: Record<string, any> = {
     updatedAt: serverTimestamp(),
   };
+  if (!cotizacionInput.esComplementariaTrabajoAdicional) {
+    ordenUpdate.cotizacionConPrecioPorDefinir = tienePrecioPorDefinir;
+  }
   if (totalCalculado !== null) {
     ordenUpdate.costoTotalEstimadoBs = totalCalculado;
     if (!orden.presupuestoOriginalBs) {
@@ -2179,6 +2173,11 @@ export async function registrarAprobacionCotizacionFirestore(
     fechaIngresoEstadoActualServidor: serverTimestamp(),
     historialEstados: historialActualizado,
     costoTotalEstimadoBs: montoAprobado,
+    // Módulo 5: la cotización principal reemplaza el monto principal; las complementarias se suman
+    ...(cotizacion.esComplementariaTrabajoAdicional
+      ? { montoAprobadoAdicionalesBs: (orden.montoAprobadoAdicionalesBs || 0) + montoAprobado }
+      : { montoAprobadoPrincipalBs: montoAprobado, cotizacionConPrecioPorDefinir: false }),
+    saldoDesde: orden.saldoDesde || new Date().toISOString(),
     aprobaciones: {
       aprobadoPorCliente: true,
       fechaAprobacion: aprobacionData.fechaHora,

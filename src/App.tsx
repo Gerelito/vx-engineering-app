@@ -69,6 +69,8 @@ import {
   CotizacionOrden,
 } from './types';
 import { db } from './lib/firebase';
+import { CajaView } from './components/modulo5/CajaView';
+import { PagosOrdenModal } from './components/modulo5/PagosOrdenModal';
 import { collection, doc, onSnapshot, onSnapshotsInSync } from 'firebase/firestore';
 import { CheckCircle2, ShieldCheck, AlertCircle, X, Loader2, ClipboardList, Wrench } from 'lucide-react';
 
@@ -83,7 +85,7 @@ function TallerAppContent() {
   const [config, setConfig] = useState<TallerConfig>(DEFAULT_CONFIG);
 
   // Estados de navegación
-  const [vistaActiva, setVistaActiva] = useState<'recepciones' | 'taller' | 'clientes' | 'vehiculos' | 'auditoria'>('taller');
+  const [vistaActiva, setVistaActiva] = useState<'recepciones' | 'taller' | 'caja' | 'clientes' | 'vehiculos' | 'auditoria'>('taller');
 
   // Estado del indicador de nube (verde = sincronizado; amarillo = pendiente offline; rojo = error de permisos; rosa = error al guardar)
   const [estadoNube, setEstadoNube] = useState<'sincronizado' | 'pendiente_offline' | 'error_permisos' | 'error_guardar'>('sincronizado');
@@ -135,6 +137,9 @@ function TallerAppContent() {
   const [ordenParaAprobacion, setOrdenParaAprobacion] = useState<OrdenServicio | null>(null);
   const [cotizacionParaAprobacion, setCotizacionParaAprobacion] = useState<CotizacionOrden | null>(null);
   const [cotizacionParaImprimir, setCotizacionParaImprimir] = useState<CotizacionOrden | null>(null);
+
+  // Módulo 5: Caja y pagos (se guarda el id para mostrar siempre la orden actualizada en vivo)
+  const [ordenPagosId, setOrdenPagosId] = useState<string | null>(null);
 
   // Preselección para asistente de recepción (Módulo 2 revisión 1)
   const [recepcionClienteId, setRecepcionClienteId] = useState<string | undefined>(undefined);
@@ -231,6 +236,7 @@ function TallerAppContent() {
     // 1. Clientes en tiempo real (Requisito 3: calcula formato 7000-0001 y telefonoE164 al cargar para registros antiguos)
     const unsubClientes = onSnapshot(
       collection(db, 'clientes'),
+      { includeMetadataChanges: true },
       (snapshot) => {
         const lista: Cliente[] = snapshot.docs.map((d) => {
           const c = d.data() as Cliente;
@@ -253,6 +259,7 @@ function TallerAppContent() {
     // 2. Vehículos en tiempo real
     const unsubVehiculos = onSnapshot(
       collection(db, 'vehiculos'),
+      { includeMetadataChanges: true },
       (snapshot) => {
         const lista: Vehiculo[] = snapshot.docs.map((d) => d.data() as Vehiculo);
         setVehiculos(lista);
@@ -268,6 +275,7 @@ function TallerAppContent() {
     // 3. Órdenes de servicio en tiempo real (Módulo 2)
     const unsubOrdenes = onSnapshot(
       collection(db, 'ordenes'),
+      { includeMetadataChanges: true },
       (snapshot) => {
         const lista: OrdenServicio[] = snapshot.docs.map((d) => d.data() as OrdenServicio);
         // Ordenar por fecha descendente
@@ -289,6 +297,7 @@ function TallerAppContent() {
     // 4. Auditoría en tiempo real
     const unsubAuditoria = onSnapshot(
       collection(db, 'auditoria'),
+      { includeMetadataChanges: true },
       (snapshot) => {
         const lista: AuditoriaEvento[] = snapshot.docs.map((d) => {
           const data = d.data();
@@ -813,12 +822,25 @@ function TallerAppContent() {
               }
             }}
             onAbrirDetalle={(ord) => setOrdenDetalle(ord)}
+            onAbrirPagos={(ord) => setOrdenPagosId(ord.id)}
             onNuevaRecepcion={() => {
               setRecepcionClienteId(undefined);
               setRecepcionVehiculoId(undefined);
               setModalRecepcionAbierto(true);
             }}
             onAsignarBahiaYResponsable={handleAsignarBahiaYResponsable}
+          />
+        )}
+
+        {vistaActiva === 'caja' && usuarioActual && (
+          <CajaView
+            ordenes={ordenes}
+            config={config}
+            usuarioActual={usuarioActual}
+            onAbrirPagos={(ord) => setOrdenPagosId(ord.id)}
+            onAbrirDetalle={(ord) => setOrdenDetalle(ord)}
+            onExito={(m) => mostrarNotificacion(m)}
+            onError={(m) => setErrorVisible(m)}
           />
         )}
 
@@ -1160,6 +1182,16 @@ function TallerAppContent() {
       )}
 
       {/* Diálogo Propio de la Aplicación (sin window.confirm / alert) */}
+      {ordenPagosId && usuarioActual && (
+        <PagosOrdenModal
+          orden={ordenes.find((o) => o.id === ordenPagosId) || null}
+          config={config}
+          usuarioActual={usuarioActual}
+          onClose={() => setOrdenPagosId(null)}
+          onExito={(m) => mostrarNotificacion(m)}
+        />
+      )}
+
       <AppDialog dialog={dialog} onClose={() => setDialog(null)} />
 
     </div>

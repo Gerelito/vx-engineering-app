@@ -391,6 +391,18 @@ export interface OrdenServicio {
   presupuestoOriginalBs?: number | null;
   costoTotalEstimadoBs?: number | null;
 
+  // Módulo 4/5: montos aprobados (principal = cotización principal, adicionales = complementarias)
+  montoAprobadoPrincipalBs?: number | null;
+  montoAprobadoAdicionalesBs?: number | null;
+  cotizacionConPrecioPorDefinir?: boolean;
+  cargosAdicionalesBs?: number | null; // almacenaje u otros cargos (Módulo 6)
+
+  // Módulo 5: resumen de pagos (se actualiza en la misma transacción que cada pago)
+  pagos?: ResumenPagosOrden | null;
+  saldoDesde?: string | null;
+  entregaConSaldo?: AutorizacionEntregaConSaldo | null;
+  fechaEntrega?: string | null;
+
   // Metadatos
   creadoPorUid: string;
   creadoPorEmail: string;
@@ -427,7 +439,8 @@ export interface AuditoriaEvento {
     | 'Aprobación Cotización'
     | 'Rechazo Cotización'
     | 'Descuento Cotización'
-    | 'Plantilla';
+    | 'Plantilla'
+    | string;
   entidad:
     | 'clientes'
     | 'vehiculos'
@@ -438,7 +451,10 @@ export interface AuditoriaEvento {
     | 'fotos'
     | 'contadores'
     | 'cotizaciones'
-    | 'plantillas';
+    | 'plantillas'
+    | 'pagos'
+    | 'contactos'
+    | 'cajas';
   entidadId: string;
   antes: Record<string, any> | null;
   despues: Record<string, any> | null;
@@ -477,6 +493,9 @@ export interface TallerConfig {
 
   // Módulo 4: Plantillas de servicios frecuentes
   plantillasCotizacion?: PlantillaCotizacion[];
+
+  // Módulo 5: medios de pago disponibles (ej. QR, Efectivo)
+  mediosPago?: string[];
 
   auditoriaId?: string; // ID de auditoría atómica vinculada
 }
@@ -633,4 +652,110 @@ export interface PlantillaCotizacion {
   descripcion?: string | null;
   items: Omit<ItemCotizacion, 'id' | 'aprobado'>[];
   activo: boolean;
+}
+
+// -------------------------------------------------------------
+// MÓDULO 5: CAJA Y PAGOS
+// -------------------------------------------------------------
+
+export type TipoPago = 'Anticipo' | 'Abono' | 'Pago final' | 'Anulación';
+
+export interface MontoPorMedio {
+  medio: string; // 'QR', 'Efectivo' u otro configurado
+  montoBs: number; // negativo en anulaciones
+}
+
+export interface PagoOrden {
+  id: string;
+  ordenId: string;
+  folio: string;
+  clienteId: string;
+  clienteNombre: string;
+  vehiculoPlaca: string;
+  tipo: TipoPago;
+  montos: MontoPorMedio[];
+  totalBs: number;
+  concepto: string;
+  comprobanteBase64?: string | null;
+  aCuenta: boolean; // registrado mientras el precio estaba pendiente de negociación
+  anulaPagoId?: string | null;
+  motivoAnulacion?: string | null;
+  fechaDia: string; // aaaa-mm-dd en hora de Bolivia
+  fechaLocal: string; // ISO del dispositivo (referencia)
+  fecha?: FechaFS; // hora del servidor
+  registradoPorUid: string;
+  registradoPorEmail: string;
+  registradoPorNombre: string;
+  auditoriaId: string;
+}
+
+export interface ResumenPagosOrden {
+  porMedio: Record<string, number>;
+  totalPagadoBs: number;
+  cantidadPagos: number;
+  ultimoPagoFecha?: string | null;
+  ultimoPagoMontoBs?: number | null;
+}
+
+export interface AutorizacionEntregaConSaldo {
+  autorizada: boolean;
+  motivo: string;
+  fechaCompromisoPago?: string | null;
+  saldoAlAutorizarBs: number;
+  autorizadoPorNombre: string;
+  autorizadoPorEmail: string;
+  fecha: string;
+}
+
+export type EstadoTotalOrden = 'aprobado' | 'pendiente_negociacion' | 'sin_aprobacion';
+
+export interface FinanzasOrden {
+  estadoTotal: EstadoTotalOrden;
+  totalAprobadoBs: number | null;
+  porMedio: Record<string, number>;
+  pagadoQRBs: number;
+  pagadoEfectivoBs: number;
+  pagadoOtrosBs: number;
+  totalPagadoBs: number;
+  saldoBs: number | null;
+  pagosACuenta: boolean;
+}
+
+export type MedioContacto = 'Llamada' | 'WhatsApp' | 'Mensaje' | 'Visita';
+export type MotivoContacto = 'Cobranza' | 'Aviso de vehículo listo' | 'Cotización' | 'Seguimiento' | 'Envío de documento' | 'Otro';
+
+export interface ContactoCliente {
+  id: string;
+  clienteId: string;
+  clienteNombre: string;
+  ordenId?: string | null;
+  folio?: string | null;
+  medio: MedioContacto;
+  motivo: MotivoContacto;
+  resumen: string;
+  resultado: string;
+  fechaLocal: string;
+  fecha?: FechaFS;
+  registradoPorUid: string;
+  registradoPorEmail: string;
+  registradoPorNombre: string;
+  auditoriaId: string;
+}
+
+export interface CierreCaja {
+  id: string; // aaaa-mm-dd
+  fechaDia: string;
+  totalPorMedio: Record<string, number>;
+  totalRecibidoBs: number;
+  efectivoEsperadoBs: number;
+  efectivoContadoBs: number;
+  diferenciaBs: number;
+  cantidadMovimientos: number;
+  nota?: string | null;
+  cerrado: boolean;
+  cerradoPorNombre?: string | null;
+  cerradoPorEmail?: string | null;
+  fechaCierreLocal?: string | null;
+  reaperturas?: { fecha: string; motivo: string; usuarioNombre: string; usuarioEmail: string }[];
+  auditoriaId: string;
 }
