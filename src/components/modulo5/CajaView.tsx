@@ -17,6 +17,8 @@ import {
   resumirMovimientosDelDia,
 } from '../../lib/caja';
 import { formatearFecha, formatearMonedaBs } from '../../lib/storage';
+import { llenarPlantilla, plantillaWhatsapp } from '../../lib/plantillas';
+import { urlVerificacion } from '../../lib/verificacion';
 import { AlertTriangle, Calculator, Lock, MessageCircle, Phone, Search, Unlock, Wallet } from 'lucide-react';
 
 interface Props {
@@ -63,7 +65,7 @@ export const CajaView: React.FC<Props> = (props) => {
   );
 };
 
-const CuentasPorCobrar: React.FC<Props> = ({ ordenes, usuarioActual, onAbrirPagos, onAbrirDetalle, onExito, onError }) => {
+const CuentasPorCobrar: React.FC<Props> = ({ ordenes, config, usuarioActual, onAbrirPagos, onAbrirDetalle, onExito, onError }) => {
   const [busqueda, setBusqueda] = useState('');
   const [antiguedad, setAntiguedad] = useState<FiltroAntiguedad>('todas');
   const [soloEntregadasConSaldo, setSoloEntregadasConSaldo] = useState(false);
@@ -205,7 +207,7 @@ const CuentasPorCobrar: React.FC<Props> = ({ ordenes, usuarioActual, onAbrirPago
                   </button>
                   {telefono && (
                     <a
-                      href={`https://wa.me/${telefono}`}
+                      href={`https://wa.me/${telefono}?text=${encodeURIComponent(llenarPlantilla(plantillaWhatsapp(config, 'saldo'), orden, config, { saldo: fin.saldoBs, enlace: urlVerificacion(config, orden) }))}`}
                       target="_blank"
                       rel="noreferrer"
                       className="inline-flex items-center gap-1 px-3 py-2.5 rounded-lg bg-green-50 text-green-800 border border-green-200 text-sm font-semibold"

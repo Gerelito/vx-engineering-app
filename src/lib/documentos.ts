@@ -76,17 +76,8 @@ export function codigoCorto(orden: OrdenServicio): string {
   return `${orden.folio} · ${c.slice(-8, -4)}-${c.slice(-4)}`;
 }
 
-/** URL base pública de la app (desde Configuración; si falta, la dirección actual). */
-export function urlBaseVerificacion(config: TallerConfig): string {
-  const conf = (config.dominioVerificacionQr || '').trim().replace(/\/+$/, '');
-  if (conf && /^https?:\/\//.test(conf) && !/ai\.studio|aistudio/.test(conf)) return conf;
-  return `${window.location.origin}${window.location.pathname}`.replace(/\/+$/, '');
-}
-
-export function urlVerificacion(config: TallerConfig, orden: OrdenServicio, tipo?: TipoDocumento, version?: number): string {
-  const extra = tipo === 'cotizacion' && version ? `?d=cotizacion&n=${version}` : tipo ? `?d=${tipo}` : '';
-  return `${urlBaseVerificacion(config)}/#/v/${orden.codigoVerificacion}${extra}`;
-}
+export { urlBaseVerificacion, urlVerificacion } from './verificacion';
+import { urlVerificacion } from './verificacion';
 
 const TIPO_ITEM: Record<string, string> = { mano_obra: 'Mano de obra', repuesto: 'Repuesto', terceros: 'Servicio externo' };
 

@@ -524,6 +524,11 @@ export interface TallerConfig {
   // Módulo 5: medios de pago disponibles (ej. QR, Efectivo)
   mediosPago?: string[];
 
+  // Módulo 10: plantillas de WhatsApp, textos legales y seguridad
+  plantillasWhatsapp?: Partial<Record<ClavePlantillaWhatsapp, string>>;
+  textosLegales?: Partial<Record<ClaveTextoLegal, string>>;
+  minutosInactividad?: number; // cierre de sesión automático (0 = nunca)
+
   auditoriaId?: string; // ID de auditoría atómica vinculada
 }
 
@@ -900,3 +905,9 @@ export interface CorreccionOrden {
   registradoPorNombre: string;
   registradoPorEmail: string;
 }
+
+// -------------------------------------------------------------
+// MÓDULO 10: CONFIGURACIÓN
+// -------------------------------------------------------------
+export type ClavePlantillaWhatsapp = 'listo' | 'cotizacion' | 'orden' | 'saldo';
+export type ClaveTextoLegal = 'consentimiento' | 'condicionesOrden' | 'condicionesAlmacenaje' | 'exclusionesGarantia';

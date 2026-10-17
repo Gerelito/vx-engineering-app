@@ -6,7 +6,7 @@
  */
 import { doc, Transaction, WriteBatch } from 'firebase/firestore';
 import { db } from './firebase';
-import { EstadoOrden, OrdenServicio } from '../types';
+import { EstadoOrden, OrdenServicio, TallerConfig } from '../types';
 
 export const PASOS_CLIENTE = ['Recibido', 'Diagnóstico', 'Aprobado', 'En reparación', 'Listo para entrega', 'Entregado'];
 
@@ -102,3 +102,16 @@ export function sincronizarVerificacion(
   const data = { ...camposPublicosOrden(orden, estado, auditoriaId), ...extra };
   (w as WriteBatch).set(ref, data, { merge: true });
 }
+
+/** URL base pública de la app (desde Configuración; si falta, la dirección actual). */
+export function urlBaseVerificacion(config: TallerConfig): string {
+  const conf = (config.dominioVerificacionQr || '').trim().replace(/\/+$/, '');
+  if (conf && /^https?:\/\//.test(conf) && !/ai\.studio|aistudio/.test(conf)) return conf;
+  return `${window.location.origin}${window.location.pathname}`.replace(/\/+$/, '');
+}
+
+export function urlVerificacion(config: TallerConfig, orden: Pick<OrdenServicio, 'codigoVerificacion'>, tipo?: TipoDocumentoPublico, version?: number): string {
+  const extra = tipo === 'cotizacion' && version ? `?d=cotizacion&n=${version}` : tipo ? `?d=${tipo}` : '';
+  return `${urlBaseVerificacion(config)}/#/v/${orden.codigoVerificacion}${extra}`;
+}
+

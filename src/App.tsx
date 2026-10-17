@@ -76,6 +76,7 @@ import { AuditoriaPantalla } from './components/modulo9/AuditoriaPantalla';
 import { HistorialVehiculoModal } from './components/modulo8/HistorialVehiculoModal';
 import { FichaClienteModal } from './components/modulo8/FichaClienteModal';
 import { descargarBlob } from './lib/envios';
+import { leerUltimoRespaldo } from './lib/respaldo';
 import type { TipoDocumentoPublico } from './lib/verificacion';
 import { EntregasView } from './components/modulo6/EntregasView';
 import { ControlCalidadModal } from './components/modulo6/ControlCalidadModal';
@@ -86,7 +87,7 @@ import { collection, doc, limit, onSnapshot, onSnapshotsInSync, orderBy, query }
 import { CheckCircle2, ShieldCheck, AlertCircle, X, Loader2, ClipboardList, Wrench } from 'lucide-react';
 
 function TallerAppContent() {
-  const { usuarioActual, esDuenoAutorizado, cargandoAuth } = useAuth();
+  const { usuarioActual, esDuenoAutorizado, cargandoAuth, cerrarSesion } = useAuth();
 
   // Estados de datos en tiempo real desde Firestore (ÚNICA fuente de verdad)
   const [clientes, setClientes] = useState<Cliente[]>([]);
@@ -209,6 +210,42 @@ function TallerAppContent() {
       setErrorVisible(`Error al guardar (${prefijo}): ${errMsg}`);
     }
   };
+
+  // Módulo 10: cierre de sesión automático por inactividad (configurable; 0 = nunca)
+  useEffect(() => {
+    const minutos = config.minutosInactividad ?? 30;
+    if (!usuarioActual || !minutos) return;
+    let ultimo = Date.now();
+    const tocar = () => {
+      ultimo = Date.now();
+    };
+    const eventos = ['pointerdown', 'keydown', 'scroll', 'touchstart'];
+    eventos.forEach((e) => window.addEventListener(e, tocar, { passive: true }));
+    const t = window.setInterval(() => {
+      if (Date.now() - ultimo > minutos * 60_000) {
+        window.clearInterval(t);
+        try {
+          sessionStorage.setItem('vx-cierre-inactividad', '1');
+        } catch {
+          /* sin almacenamiento */
+        }
+        cerrarSesion().catch(() => undefined);
+      }
+    }, 30_000);
+    return () => {
+      eventos.forEach((e) => window.removeEventListener(e, tocar));
+      window.clearInterval(t);
+    };
+  }, [usuarioActual?.uid, config.minutosInactividad]);
+
+  // Módulo 10: aviso si pasaron más de 7 días sin respaldo
+  const [diasSinRespaldo, setDiasSinRespaldo] = useState<number | null>(null);
+  useEffect(() => {
+    if (!usuarioActual || !esDuenoAutorizado) return;
+    leerUltimoRespaldo()
+      .then((f) => setDiasSinRespaldo(f ? Math.floor((Date.now() - Date.parse(f)) / 86_400_000) : -1))
+      .catch(() => setDiasSinRespaldo(null));
+  }, [usuarioActual?.uid, esDuenoAutorizado, modalConfiguracionAbierto]);
 
   // Función reactiva para sincronizar estado de nube
   // Verde ('sincronizado') si navigator.onLine y no hay hasPendingWrites
@@ -786,6 +823,15 @@ function TallerAppContent() {
 
       {/* Contenido Principal */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        {diasSinRespaldo !== null && (diasSinRespaldo < 0 || diasSinRespaldo > 7) && (
+          <button
+            onClick={() => setModalConfiguracionAbierto(true)}
+            className="w-full mb-3 text-left text-xs sm:text-sm bg-amber-50 border border-amber-300 text-amber-900 rounded-xl px-3 py-2"
+          >
+            <b>{diasSinRespaldo < 0 ? 'Todavía no hay ningún respaldo.' : `Pasaron ${diasSinRespaldo} días desde el último respaldo.`}</b> El plan gratuito no guarda copias
+            automáticas: ve a Configuración → Respaldo y descarga uno.
+          </button>
+        )}
         <div className="mb-4">
           <BusquedaGlobal
             clientes={clientes}
@@ -1116,13 +1162,16 @@ function TallerAppContent() {
         onError={(msg) => manejarErrorFirestore(new Error(msg), 'consentimiento')}
       />
 
+      {modalConfiguracionAbierto && (
       <ConfiguracionModal
         isOpen={modalConfiguracionAbierto}
+        ordenes={ordenes}
         onClose={() => setModalConfiguracionAbierto(false)}
         config={config}
         onUpdateConfig={(nueva) => setConfig(nueva)}
         onError={(msg) => manejarErrorFirestore(new Error(msg), 'configuración')}
       />
+      )}
 
       {/* MODALES DEL MÓDULO 3: TALLER */}
       {ordenParaTransicion && (

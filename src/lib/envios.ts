@@ -7,6 +7,7 @@ import { db } from './firebase';
 import { escribirAuditoria } from './caja';
 import { limpiarUndefined } from './storage';
 import { camposPublicosOrden, TipoDocumentoPublico } from './verificacion';
+import { llenarPlantilla, plantillaWhatsapp } from './plantillas';
 import { DuenoUsuario, OrdenServicio, TallerConfig } from '../types';
 
 export const NOMBRE_DOC: Record<TipoDocumentoPublico, string> = {
@@ -75,14 +76,10 @@ export async function cambiarActivoVerificacionFirestore(
   await batch.commit();
 }
 
+/** Mensaje desde las plantillas de Configuración (Módulo 10). */
 export function mensajeWhatsApp(orden: OrdenServicio, tipo: TipoDocumentoPublico, url: string, config: TallerConfig, version?: number | null) {
-  const primerNombre = (orden.clienteNombre || '').trim().split(/\s+/)[0] || '';
-  const docTxt = `${NOMBRE_DOC[tipo]}${tipo === 'cotizacion' && version ? ` (versión ${version})` : ''}`;
-  return (
-    `Hola ${primerNombre}, le saluda ${config.nombre || 'VX Engineering'}. ` +
-    `Le enviamos su ${docTxt.toLowerCase()} de la orden ${orden.folio} (${orden.vehiculoMarca} ${orden.vehiculoModelo}, placa ${orden.vehiculoPlaca}). ` +
-    `Puede verificar el documento y ver el estado de su vehículo aquí: ${url}`
-  );
+  void version;
+  return llenarPlantilla(plantillaWhatsapp(config, tipo === 'cotizacion' ? 'cotizacion' : 'orden'), orden, config, { enlace: url });
 }
 
 function telefonoWa(orden: OrdenServicio): string {

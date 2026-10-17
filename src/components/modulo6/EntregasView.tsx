@@ -10,6 +10,8 @@ import {
 } from '../../lib/entrega';
 import { calcularFinanzasOrden, diaLaPaz, formatearDia, redondearBs } from '../../lib/caja';
 import { procesarArchivoAdjunto } from '../../lib/fileCompression';
+import { llenarPlantilla, plantillaWhatsapp } from '../../lib/plantillas';
+import { urlVerificacion } from '../../lib/verificacion';
 import { formatearMonedaBs } from '../../lib/storage';
 import { AlertTriangle, Bell, Camera, ClipboardCheck, KeyRound, Loader2, MessageCircle, PhoneCall, ShieldCheck, Undo2, Wallet, Wrench, X } from 'lucide-react';
 
@@ -271,7 +273,7 @@ const AvisoModal: React.FC<{ orden: OrdenServicio; config: TallerConfig; usuario
   const [guardando, setGuardando] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const tel = telWa(orden);
-  const texto = `Hola ${orden.clienteNombre}, le saluda ${config.nombre || 'VX Engineering'}. Su vehículo ${orden.vehiculoMarca} ${orden.vehiculoModelo} (${orden.vehiculoPlaca}) ya está listo para recoger (orden ${orden.folio}). Horario: ${config.horario || 'consultar'}. Después de ${config.almacenajeDiasGratis ?? 3} días se cobra almacenaje.`;
+  const texto = llenarPlantilla(plantillaWhatsapp(config, 'listo'), orden, config, { enlace: urlVerificacion(config, orden) });
 
   const guardar = async () => {
     setGuardando(true);

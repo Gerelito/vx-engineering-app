@@ -1,5 +1,6 @@
 import React from 'react';
 import { OrdenServicio, TallerConfig } from '../../types';
+import { textoLegal } from '../../lib/plantillas';
 import { formatearTelefonoBolivia, formatearFecha, formatearMonedaBs } from '../../lib/storage';
 import { Printer, X, Wrench, AlertTriangle, AlertCircle, Calendar, ShieldCheck, Clock } from 'lucide-react';
 
@@ -284,9 +285,7 @@ export const OrdenImprimibleModal: React.FC<OrdenImprimibleModalProps> = ({
                 )}
               </li>
               <li>
-                <strong>Custodia y Almacenaje:</strong> Una vez notificada la cotización o terminación del trabajo, el cliente dispone de{' '}
-                <strong>{config.almacenajeDiasGratis || 3} días calendario libres</strong>. Cumplido este plazo se aplicará una tarifa de{' '}
-                <strong>{config.almacenajeCostoDiarioBs || 35} Bs/día</strong>.
+                <strong>Custodia y Almacenaje:</strong> {textoLegal(config, 'condicionesAlmacenaje')}
               </li>
               <li>
                 <strong>Repuestos reemplazados:</strong>{' '}
@@ -299,6 +298,15 @@ export const OrdenImprimibleModal: React.FC<OrdenImprimibleModalProps> = ({
                 {orden.autorizaciones?.aceptaContactoWhatsapp
                   ? 'Autoriza el envío de cotizaciones, diagnósticos técnicos y reportes por WhatsApp / teléfono.'
                   : 'Solo contacto en persona o llamadas telefónicas.'}
+              </li>
+              <li>
+                <strong>Condiciones:</strong> {textoLegal(config, 'condicionesOrden')}
+              </li>
+              <li>
+                <strong>Garantía:</strong> {textoLegal(config, 'exclusionesGarantia')}
+              </li>
+              <li>
+                <strong>Datos personales:</strong> {textoLegal(config, 'consentimiento')}
               </li>
             </ul>
           </div>

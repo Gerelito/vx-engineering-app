@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { procesarArchivoAdjunto } from '../lib/fileCompression';
 import { useAuth } from '../context/AuthContext';
-import { TallerConfig, TrabajoTarifario } from '../types';
+import { ClavePlantillaWhatsapp, ClaveTextoLegal, OrdenServicio, TallerConfig, TrabajoTarifario } from '../types';
+import { PLANTILLAS_WHATSAPP, TEXTOS_LEGALES } from '../lib/plantillas';
+import { PanelRespaldo } from './modulo10/PanelRespaldo';
 import {
   X,
   Settings,
@@ -28,6 +30,7 @@ interface ConfiguracionModalProps {
   config: TallerConfig;
   onUpdateConfig: (nuevaConfig: TallerConfig) => void;
   onError: (mensaje: string) => void;
+  ordenes?: OrdenServicio[];
 }
 
 export const ConfiguracionModal: React.FC<ConfiguracionModalProps> = ({
@@ -36,10 +39,11 @@ export const ConfiguracionModal: React.FC<ConfiguracionModalProps> = ({
   config,
   onUpdateConfig,
   onError,
+  ordenes = [],
 }) => {
   const { usuarioActual, duenosEmails, modificarDuenos } = useAuth();
   const [dialog, setDialog] = useState<DialogOptions | null>(null);
-  const [tabActiva, setTabActiva] = useState<'dueños' | 'taller' | 'operacion' | 'tarifario'>('dueños');
+  const [tabActiva, setTabActiva] = useState<'dueños' | 'taller' | 'operacion' | 'tarifario' | 'cobros' | 'mensajes' | 'seguridad' | 'respaldo'>('dueños');
 
   // Estados locales de configuración general
   const [nombreTaller, setNombreTaller] = useState(config.nombre);
@@ -50,6 +54,24 @@ export const ConfiguracionModal: React.FC<ConfiguracionModalProps> = ({
   const [logoUrl, setLogoUrl] = useState<string | null>(config.logoUrl || null);
   const [urlVerificacion, setUrlVerificacion] = useState(config.dominioVerificacionQr || '');
   const [errorLogo, setErrorLogo] = useState<string | null>(null);
+  // Módulo 10
+  const [diasGratis, setDiasGratis] = useState<number>(config.almacenajeDiasGratis ?? 3);
+  const [costoDiario, setCostoDiario] = useState<number>(config.almacenajeCostoDiarioBs ?? 0);
+  const [mediosPago, setMediosPago] = useState<string[]>(config.mediosPago?.length ? config.mediosPago : ['QR', 'Efectivo']);
+  const [nuevoMedio, setNuevoMedio] = useState('');
+  const [plantillas, setPlantillas] = useState<Record<ClavePlantillaWhatsapp, string>>({
+    listo: config.plantillasWhatsapp?.listo || PLANTILLAS_WHATSAPP.listo.texto,
+    cotizacion: config.plantillasWhatsapp?.cotizacion || PLANTILLAS_WHATSAPP.cotizacion.texto,
+    orden: config.plantillasWhatsapp?.orden || PLANTILLAS_WHATSAPP.orden.texto,
+    saldo: config.plantillasWhatsapp?.saldo || PLANTILLAS_WHATSAPP.saldo.texto,
+  });
+  const [textos, setTextos] = useState<Record<ClaveTextoLegal, string>>({
+    consentimiento: config.textosLegales?.consentimiento || TEXTOS_LEGALES.consentimiento.texto,
+    condicionesOrden: config.textosLegales?.condicionesOrden || TEXTOS_LEGALES.condicionesOrden.texto,
+    condicionesAlmacenaje: config.textosLegales?.condicionesAlmacenaje || TEXTOS_LEGALES.condicionesAlmacenaje.texto,
+    exclusionesGarantia: config.textosLegales?.exclusionesGarantia || TEXTOS_LEGALES.exclusionesGarantia.texto,
+  });
+  const [minutosInactividad, setMinutosInactividad] = useState<number>(config.minutosInactividad ?? 30);
   const [tarifaHora, setTarifaHora] = useState(config.tarifaHoraEstandarBs);
   const [margenMinimo, setMargenMinimo] = useState(config.margenMinimoPorcentaje);
   const [vigenciaDias, setVigenciaDias] = useState<number>(config.vigenciaCotizacionDias || 7);
@@ -221,6 +243,12 @@ export const ConfiguracionModal: React.FC<ConfiguracionModalProps> = ({
         limiteDiagnosticoHoras: Number(limiteDiagHoras) || 4,
         factorTiempoEstimadoReparacion: Number(factorReparacion) || 1.5,
         limiteControlCalidadHoras: Number(limiteQcHoras) || 4,
+        almacenajeDiasGratis: Math.max(0, Number(diasGratis) || 0),
+        almacenajeCostoDiarioBs: Math.max(0, Number(costoDiario) || 0),
+        mediosPago: mediosPago.length ? mediosPago : ['QR', 'Efectivo'],
+        plantillasWhatsapp: plantillas,
+        textosLegales: textos,
+        minutosInactividad: Math.max(0, Math.round(Number(minutosInactividad) || 0)),
       };
 
       await guardarConfiguracionTaller(nueva, usuarioActual);
@@ -308,6 +336,25 @@ export const ConfiguracionModal: React.FC<ConfiguracionModalProps> = ({
           >
             4. Tarifario & Alertas
           </button>
+          {(
+            [
+              ['cobros', '5. Almacenaje & Pagos'],
+              ['mensajes', '6. WhatsApp & Textos'],
+              ['seguridad', '7. Seguridad'],
+              ['respaldo', '8. Respaldo'],
+            ] as const
+          ).map(([id, txt]) => (
+            <button
+              key={id}
+              type="button"
+              onClick={() => setTabActiva(id)}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap cursor-pointer transition-colors ${
+                tabActiva === id ? 'bg-slate-900 text-white font-bold' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200'
+              }`}
+            >
+              {txt}
+            </button>
+          ))}
         </div>
 
         <div className="p-5 space-y-5 overflow-y-auto flex-1">
@@ -327,7 +374,7 @@ export const ConfiguracionModal: React.FC<ConfiguracionModalProps> = ({
               </div>
 
               <p className="text-xs text-slate-600 leading-relaxed">
-                Solo las personas cuyos correos de Google figuren en esta lista pueden ingresar a la aplicación y consultar o modificar la información en Firestore. Quien no esté en la lista es bloqueado por las reglas de seguridad.
+                Solo las personas cuyos correos de Google figuren en esta lista pueden ingresar a la aplicación y consultar o modificar la información. Cada dueño entra con su propia cuenta de Google. Al quitar a alguien pierde el acceso, pero todo lo que registró queda en el historial y en la auditoría.
               </p>
 
               {/* Lista actual de dueños */}
@@ -473,8 +520,9 @@ export const ConfiguracionModal: React.FC<ConfiguracionModalProps> = ({
                           setErrorLogo(null);
                           try {
                             const r = await procesarArchivoAdjunto(f);
-                            if (r.tamanioBytes > 150_000) throw new Error('El logo quedó muy pesado; usa una imagen más simple.');
-                            setLogoUrl(r.base64Data);
+                            const chico = await achicarImagen(r.base64Data, 300);
+                            if (chico.length > 200_000) throw new Error('El logo quedó muy pesado; usa una imagen más simple.');
+                            setLogoUrl(chico);
                           } catch (err: any) {
                             setErrorLogo(err?.message || String(err));
                           }
@@ -817,6 +865,110 @@ export const ConfiguracionModal: React.FC<ConfiguracionModalProps> = ({
               </div>
             </div>
           )}
+
+          {/* TAB 5: ALMACENAJE Y MEDIOS DE PAGO (MÓDULO 10) */}
+          {tabActiva === 'cobros' && (
+            <div className="space-y-4 text-xs">
+              <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
+                <h3 className="text-sm font-bold text-slate-900">Almacenaje</h3>
+                <div className="grid grid-cols-2 gap-3">
+                  <label>
+                    <span className="block font-semibold text-slate-700 mb-1">Días gratis después del aviso</span>
+                    <input type="number" min="0" value={diasGratis} onChange={(e) => setDiasGratis(Number(e.target.value))} className="w-full px-3 py-1.5 rounded-lg border border-slate-300 bg-white" />
+                  </label>
+                  <label>
+                    <span className="block font-semibold text-slate-700 mb-1">Cargo por día (Bs)</span>
+                    <input type="number" min="0" value={costoDiario} onChange={(e) => setCostoDiario(Number(e.target.value))} className="w-full px-3 py-1.5 rounded-lg border border-slate-300 bg-white" />
+                  </label>
+                </div>
+              </div>
+              <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-2">
+                <h3 className="text-sm font-bold text-slate-900">Medios de pago</h3>
+                <div className="flex flex-wrap gap-2">
+                  {mediosPago.map((m) => (
+                    <span key={m} className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-white border border-slate-300 font-semibold">
+                      {m}
+                      {mediosPago.length > 1 && (
+                        <button type="button" onClick={() => setMediosPago((l) => l.filter((x) => x !== m))} className="text-slate-400 hover:text-red-600" aria-label={`Quitar ${m}`}>
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                    </span>
+                  ))}
+                </div>
+                <div className="flex gap-2">
+                  <input value={nuevoMedio} onChange={(e) => setNuevoMedio(e.target.value)} placeholder="ej. Transferencia" className="flex-1 px-3 py-1.5 rounded-lg border border-slate-300 bg-white" />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const m = nuevoMedio.trim();
+                      if (m && !mediosPago.includes(m)) setMediosPago((l) => [...l, m]);
+                      setNuevoMedio('');
+                    }}
+                    className="px-3 py-1.5 rounded-lg bg-slate-900 text-white font-semibold"
+                  >
+                    Agregar
+                  </button>
+                </div>
+              </div>
+              <BotonGuardar onClick={handleGuardarConfigGeneral} guardando={guardandoConfig} />
+            </div>
+          )}
+
+          {/* TAB 6: PLANTILLAS DE WHATSAPP Y TEXTOS LEGALES (MÓDULO 10) */}
+          {tabActiva === 'mensajes' && (
+            <div className="space-y-4 text-xs">
+              <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
+                <h3 className="text-sm font-bold text-slate-900">Plantillas de WhatsApp</h3>
+                <p className="text-slate-600">
+                  Campos: <code>{'{cliente}'}</code> <code>{'{vehiculo}'}</code> <code>{'{placa}'}</code> <code>{'{folio}'}</code> <code>{'{enlace}'}</code>{' '}
+                  <code>{'{taller}'}</code> <code>{'{saldo}'}</code>
+                </p>
+                {(Object.keys(PLANTILLAS_WHATSAPP) as ClavePlantillaWhatsapp[]).map((k) => (
+                  <label key={k} className="block">
+                    <span className="flex justify-between font-semibold text-slate-700 mb-1">
+                      {PLANTILLAS_WHATSAPP[k].titulo}
+                      <button type="button" onClick={() => setPlantillas((p) => ({ ...p, [k]: PLANTILLAS_WHATSAPP[k].texto }))} className="text-slate-500 font-normal underline">
+                        Restablecer
+                      </button>
+                    </span>
+                    <textarea rows={3} value={plantillas[k]} onChange={(e) => setPlantillas((p) => ({ ...p, [k]: e.target.value }))} className="w-full px-3 py-2 rounded-lg border border-slate-300 bg-white" />
+                  </label>
+                ))}
+              </div>
+              <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
+                <h3 className="text-sm font-bold text-slate-900">Textos legales</h3>
+                <p className="text-slate-600">
+                  En almacenaje puedes usar <code>{'{dias}'}</code> y <code>{'{costo}'}</code>.
+                </p>
+                {(Object.keys(TEXTOS_LEGALES) as ClaveTextoLegal[]).map((k) => (
+                  <label key={k} className="block">
+                    <span className="block font-semibold text-slate-700 mb-1">{TEXTOS_LEGALES[k].titulo}</span>
+                    <textarea rows={3} value={textos[k]} onChange={(e) => setTextos((p) => ({ ...p, [k]: e.target.value }))} className="w-full px-3 py-2 rounded-lg border border-slate-300 bg-white" />
+                  </label>
+                ))}
+              </div>
+              <BotonGuardar onClick={handleGuardarConfigGeneral} guardando={guardandoConfig} />
+            </div>
+          )}
+
+          {/* TAB 7: SEGURIDAD (MÓDULO 10) */}
+          {tabActiva === 'seguridad' && (
+            <div className="space-y-4 text-xs">
+              <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-2">
+                <h3 className="text-sm font-bold text-slate-900">Cierre de sesión por inactividad</h3>
+                <p className="text-slate-600">Si nadie toca la app durante este tiempo, se cierra la sesión (útil si el celular o la computadora quedan en el taller). 0 = nunca.</p>
+                <label className="inline-flex items-center gap-2">
+                  <input type="number" min="0" max="480" value={minutosInactividad} onChange={(e) => setMinutosInactividad(Number(e.target.value))} className="w-24 px-3 py-1.5 rounded-lg border border-slate-300 bg-white" />
+                  minutos
+                </label>
+              </div>
+              <BotonGuardar onClick={handleGuardarConfigGeneral} guardando={guardandoConfig} />
+            </div>
+          )}
+
+          {/* TAB 8: RESPALDO (MÓDULO 10) */}
+          {tabActiva === 'respaldo' && <PanelRespaldo ordenes={ordenes} usuarioActual={usuarioActual} />}
         </div>
 
         <div className="bg-slate-100 px-6 py-3 border-t border-slate-200 flex justify-end shrink-0">
@@ -833,3 +985,36 @@ export const ConfiguracionModal: React.FC<ConfiguracionModalProps> = ({
     </div>
   );
 };
+
+const BotonGuardar: React.FC<{ onClick: (e: any) => void; guardando: boolean }> = ({ onClick, guardando }) => (
+  <div className="flex justify-end">
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={guardando}
+      className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-slate-900 hover:bg-slate-800 rounded-lg disabled:opacity-50"
+    >
+      <Save className="w-3.5 h-3.5" /> Guardar
+    </button>
+  </div>
+);
+
+/** Achica una imagen a un lado máximo (px) para guardarla en /config/taller (logo de 300 px). */
+function achicarImagen(dataUrl: string, max: number): Promise<string> {
+  return new Promise((res, rej) => {
+    const img = new Image();
+    img.onload = () => {
+      const k = Math.min(1, max / Math.max(img.width, img.height));
+      const c = document.createElement('canvas');
+      c.width = Math.round(img.width * k);
+      c.height = Math.round(img.height * k);
+      const ctx = c.getContext('2d')!;
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, c.width, c.height);
+      ctx.drawImage(img, 0, 0, c.width, c.height);
+      res(c.toDataURL('image/jpeg', 0.85));
+    };
+    img.onerror = () => rej(new Error('No se pudo leer la imagen.'));
+    img.src = dataUrl;
+  });
+}
