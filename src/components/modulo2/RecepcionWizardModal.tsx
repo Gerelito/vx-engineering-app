@@ -578,7 +578,7 @@ export const RecepcionWizardModal: React.FC<RecepcionWizardModalProps> = ({
                     className="flex items-center gap-1 text-xs font-bold text-slate-900 hover:text-blue-700 bg-white px-2.5 py-1 rounded-lg border border-slate-300 shadow-2xs cursor-pointer"
                   >
                     <Plus className="w-3.5 h-3.5" />
-                    <span>+ Nuevo Cliente Rápido</span>
+                    <span>Nuevo Cliente Rápido</span>
                   </button>
                 </div>
 
@@ -646,7 +646,7 @@ export const RecepcionWizardModal: React.FC<RecepcionWizardModalProps> = ({
                     className="flex items-center gap-1 text-xs font-bold text-slate-900 hover:text-blue-700 bg-white px-2.5 py-1 rounded-lg border border-slate-300 shadow-2xs cursor-pointer"
                   >
                     <Plus className="w-3.5 h-3.5" />
-                    <span>+ Nuevo Vehículo para este cliente</span>
+                    <span>Nuevo Vehículo para este cliente</span>
                   </button>
                 </div>
 
@@ -1159,7 +1159,6 @@ export const RecepcionWizardModal: React.FC<RecepcionWizardModalProps> = ({
                             <input
                               type="file"
                               accept="image/*"
-                              capture="environment"
                               onChange={(e) => handleCargarFoto(item.tipo, e)}
                               className="hidden"
                             />
@@ -1177,7 +1176,6 @@ export const RecepcionWizardModal: React.FC<RecepcionWizardModalProps> = ({
                           <input
                             type="file"
                             accept="image/*"
-                            capture="environment"
                             onChange={(e) => handleCargarFoto(item.tipo, e)}
                             className="hidden"
                           />

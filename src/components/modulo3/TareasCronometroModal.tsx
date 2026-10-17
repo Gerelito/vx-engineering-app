@@ -274,7 +274,7 @@ export const TareasCronometroModal: React.FC<TareasCronometroModalProps> = ({
                 className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-900 text-white rounded-lg text-xs font-bold hover:bg-slate-800 transition-colors shadow-2xs cursor-pointer"
               >
                 <Plus className="w-4 h-4" />
-                <span>+ Agregar Trabajo</span>
+                <span>Agregar Trabajo</span>
               </button>
             </div>
           )}
@@ -631,7 +631,7 @@ export const TareasCronometroModal: React.FC<TareasCronometroModalProps> = ({
         {/* Footer */}
         <div className="px-5 py-3 bg-slate-50 border-t border-slate-200 flex items-center justify-between shrink-0">
           <span className="text-[11px] text-slate-500">
-            Los intervalos quedan grabados en Firestore para cálculo exacto aunque se cierre la app.
+            Los tiempos quedan guardados aunque se cierre la app.
           </span>
           <button
             type="button"

@@ -261,7 +261,6 @@ export const PagosOrdenModal: React.FC<Props> = ({ orden, config, usuarioActual,
                 <input
                   type="file"
                   accept="image/*"
-                  capture="environment"
                   className="hidden"
                   onChange={(e) => subirComprobante(e.target.files?.[0])}
                 />

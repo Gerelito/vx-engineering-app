@@ -95,7 +95,7 @@ export const CambioPropietarioModal: React.FC<CambioPropietarioModalProps> = ({
           <div className="bg-blue-50 border border-blue-200 p-3 rounded-xl text-xs text-blue-900 flex items-start gap-2.5">
             <ShieldAlert className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
             <p>
-              <strong>Regla del Sistema (Módulo 1):</strong> El vehículo es la entidad central del historial técnico. Al transferirlo, conserva toda su hoja de vida previa, pero los datos personales del anterior propietario dejan de mostrarse en los nuevos documentos.
+              <strong>Importante:</strong> El historial técnico es del vehículo. Al transferirlo, conserva toda su hoja de vida previa, pero los datos personales del anterior propietario dejan de mostrarse en los nuevos documentos.
             </p>
           </div>
 

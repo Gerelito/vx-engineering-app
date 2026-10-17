@@ -96,7 +96,7 @@ export const ConsentimientoModal: React.FC<ConsentimientoModalProps> = ({
       });
       onClose();
     } catch (err: any) {
-      onError(`Error al guardar en Firestore: ${err.message || 'Fallo de conexión o permisos'}`);
+      onError(`Error al guardar: ${err.message || 'Fallo de conexión o permisos'}`);
     } finally {
       setGuardando(false);
     }
@@ -184,7 +184,7 @@ export const ConsentimientoModal: React.FC<ConsentimientoModalProps> = ({
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           
           <div className="bg-slate-50 border border-slate-200 p-3.5 rounded-xl text-xs text-slate-700 space-y-1">
-            <p className="font-semibold text-slate-900">Almacenamiento Directo en Firestore:</p>
+            <p className="font-semibold text-slate-900">Se guarda en la nube del taller:</p>
             <p>
               El archivo se comprime automáticamente en el navegador a formato JPEG (máx. 1280 px, calidad 0.6, objetivo &lt; 200 KB) o PDF (máx. 700 KB) y se guarda directamente en la base de datos sin incurrir en costos de Cloud Storage.
             </p>
@@ -271,7 +271,7 @@ export const ConsentimientoModal: React.FC<ConsentimientoModalProps> = ({
                       {archivoProcesado.nombreOriginal}
                     </span>
                     <span className="text-[11px] text-emerald-700 font-semibold font-mono">
-                      Optimizado: {formatearKb(archivoProcesado.tamanioBytes)} (Listo para Firestore)
+                      Optimizado: {formatearKb(archivoProcesado.tamanioBytes)} (listo para guardar)
                     </span>
                   </div>
                 </div>
@@ -317,7 +317,7 @@ export const ConsentimientoModal: React.FC<ConsentimientoModalProps> = ({
               {guardando ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>Guardando en Firestore...</span>
+                  <span>Guardando...</span>
                 </>
               ) : (
                 <span>Confirmar y Guardar</span>

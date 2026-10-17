@@ -196,7 +196,7 @@ export const VehiculoModal: React.FC<VehiculoModalProps> = ({
                 {vehiculoEditar ? 'Editar Ficha de Vehículo' : 'Registrar Nuevo Vehículo'}
               </h2>
               <p className="text-xs text-slate-400">
-                Módulo 1 · Bolivia · Placa libre e historial de propietarios
+                Placa, datos técnicos e historial de propietarios
               </p>
             </div>
           </div>

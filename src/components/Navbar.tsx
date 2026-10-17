@@ -94,7 +94,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 {nombreTaller || 'VX Engineering'}
               </span>
               <span className="text-[10px] text-slate-500 hidden sm:block font-medium">
-                Taller Mecánico Automotriz · Bolivia · Cloud Firestore
+                Taller Mecánico Automotriz · Bolivia
               </span>
             </div>
           </div>
@@ -105,12 +105,12 @@ export const Navbar: React.FC<NavbarProps> = ({
             <div
               title={
                 estadoNube === 'sincronizado'
-                  ? 'Conectado y sincronizado con Firestore en la nube'
+                  ? 'Conectado y sincronizado con la nube'
                   : estadoNube === 'pendiente_offline'
                   ? 'Sin internet: trabajando con caché local, cambios pendientes'
                   : estadoNube === 'error_permisos'
                   ? 'Error de permisos al comunicarse con Firestore'
-                  : 'Error al guardar los datos en Firestore'
+                  : 'Error al guardar los datos'
               }
               className={`flex items-center gap-1.5 px-2 sm:px-2.5 py-1 rounded-lg text-[11px] font-medium border ${
                 estadoNube === 'sincronizado'
@@ -185,21 +185,21 @@ export const Navbar: React.FC<NavbarProps> = ({
         </div>
 
         {/* Fila 2: Barra Adaptable de Navegación (Visible SIEMPRE en todas las pantallas, computadora y móvil) */}
-        {/* Todas las 5 pestañas están permanentemente visibles y nunca se ocultan ni se cortan */}
-        <div className="flex items-center justify-start sm:justify-start gap-1 sm:gap-2 pb-2 pt-0.5 overflow-x-auto scrollbar-thin border-t border-slate-100">
+        <div className="grid grid-cols-4 gap-1 sm:flex sm:items-center sm:justify-start sm:gap-2 pb-2 pt-1 sm:pt-0.5 sm:overflow-x-auto scrollbar-thin border-t border-slate-100">
           {navItems.map((item) => (
             <button
               key={item.id}
               type="button"
               onClick={() => onCambiarVista(item.id)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer whitespace-nowrap shrink-0 ${
+              className={`flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1.5 px-1 sm:px-3 py-1.5 text-[11px] sm:text-xs font-semibold rounded-lg transition-all cursor-pointer whitespace-nowrap shrink-0 ${
                 vistaActiva === item.id
                   ? 'bg-slate-900 text-white shadow-xs font-bold'
                   : 'text-slate-700 bg-slate-100/90 hover:text-slate-900 hover:bg-slate-200'
               }`}
             >
               {item.icon}
-              <span>{item.label}</span>
+              <span className="sm:hidden">{item.label.replace(' (Kanban)', '').replace('Recepciones', 'Recepción')}</span>
+              <span className="hidden sm:inline">{item.label}</span>
             </button>
           ))}
         </div>

@@ -23,6 +23,15 @@ interface VehiculosListProps {
   onVerHistorial?: (vehiculo: Vehiculo) => void;
 }
 
+/** dd/mm/aaaa (o aaaa-mm-dd) vencido o dentro de 30 días. */
+function porVencer(f?: string | null): boolean {
+  if (!f) return false;
+  const m = f.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  const t = m ? new Date(+m[3], +m[2] - 1, +m[1]).getTime() : Date.parse(f);
+  if (!isFinite(t)) return false;
+  return t - Date.now() < 30 * 86_400_000;
+}
+
 export const VehiculosList: React.FC<VehiculosListProps> = ({
   vehiculos,
   clientes,
@@ -73,47 +82,48 @@ export const VehiculosList: React.FC<VehiculosListProps> = ({
 
   const totalActivos = vehiculos.filter((v) => v.activo !== false).length;
   const totalInactivos = vehiculos.filter((v) => v.activo === false).length;
+  const totalPorVencer = vehiculos.filter((v) => v.activo !== false && (porVencer(v.vencimientoSoat) || porVencer(v.vencimientoItv))).length;
 
   return (
     <div className="space-y-6">
       
       {/* Resumen superior */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
-          <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block">
-            Vehículos en Firestore
+      <div className="grid grid-cols-3 gap-2 sm:gap-4">
+        <div className="bg-white p-3 sm:p-4 rounded-xl border border-slate-200 shadow-xs">
+          <span className="text-[10px] sm:text-[11px] font-semibold text-slate-500 uppercase tracking-wider block leading-tight">
+            Vehículos registrados
           </span>
           <span className="text-2xl font-bold font-mono text-slate-900 mt-1 block">
             {totalActivos}
           </span>
-          <span className="text-xs text-slate-500 mt-0.5 block">
-            Entidad central con historial transferible
+          <span className="text-xs text-slate-500 mt-0.5 hidden sm:block">
+            Cada uno con su hoja de vida
           </span>
         </div>
 
-        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
-          <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block">
-            Control de Vencimientos
+        <div className="bg-white p-3 sm:p-4 rounded-xl border border-slate-200 shadow-xs">
+          <span className="text-[10px] sm:text-[11px] font-semibold text-slate-500 uppercase tracking-wider block leading-tight">
+            SOAT / ITV por vencer
           </span>
           <div className="flex items-center gap-2 mt-1">
-            <span className="text-2xl font-bold font-mono text-emerald-600">
-              SOAT & ITV
+            <span className={`text-2xl font-bold font-mono ${totalPorVencer > 0 ? 'text-amber-600' : 'text-emerald-600'}`}>
+              {totalPorVencer}
             </span>
           </div>
-          <span className="text-xs text-slate-500 mt-0.5 block">
-            Alertas preventivas para clientes
+          <span className="text-xs text-slate-500 mt-0.5 hidden sm:block">
+            Vencidos o que vencen en 30 días
           </span>
         </div>
 
-        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
-          <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block">
-            Transferencias de Propiedad
+        <div className="bg-white p-3 sm:p-4 rounded-xl border border-slate-200 shadow-xs">
+          <span className="text-[10px] sm:text-[11px] font-semibold text-slate-500 uppercase tracking-wider block leading-tight">
+            Cambiaron de dueño
           </span>
           <span className="text-2xl font-bold font-mono text-slate-900 mt-1 block">
             {vehiculos.filter((v) => v.activo !== false && v.historialPropietarios.length > 1).length}
           </span>
-          <span className="text-xs text-slate-500 mt-0.5 block">
-            Vehículos con propietarios anteriores archivados
+          <span className="text-xs text-slate-500 mt-0.5 hidden sm:block">
+            Con propietarios anteriores guardados
           </span>
         </div>
       </div>
@@ -167,7 +177,7 @@ export const VehiculosList: React.FC<VehiculosListProps> = ({
           <div className="bg-white rounded-xl border border-slate-200 p-8 text-center">
             <Car className="w-8 h-8 text-slate-300 mx-auto mb-2" />
             <h3 className="text-sm font-semibold text-slate-800">
-              {vehiculos.length === 0 ? 'No hay vehículos registrados en Firestore' : 'No se encontraron vehículos'}
+              {vehiculos.length === 0 ? 'Todavía no hay vehículos registrados' : 'No se encontraron vehículos'}
             </h3>
             <p className="text-xs text-slate-500 mt-1">
               {vehiculos.length === 0
@@ -355,7 +365,7 @@ export const VehiculosList: React.FC<VehiculosListProps> = ({
                         type="button"
                         onClick={() => onDesactivarVehiculo(vehiculo)}
                         className="inline-flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium text-red-600 hover:bg-red-50 border border-red-200 rounded-lg transition-colors whitespace-nowrap cursor-pointer"
-                        title="Desactivar vehículo (en Firestore con activo: false)"
+                        title="Desactivar vehículo"
                       >
                         <XCircle className="w-3.5 h-3.5" />
                         <span>Desactivar</span>

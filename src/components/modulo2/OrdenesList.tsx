@@ -152,7 +152,6 @@ export const OrdenesList: React.FC<OrdenesListProps> = ({
 
   return (
     <div className="space-y-6">
-      
       {/* Encabezado con Botón de Acción Principal */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -161,7 +160,7 @@ export const OrdenesList: React.FC<OrdenesListProps> = ({
             <span>Recepción y Órdenes de Servicio</span>
           </h2>
           <p className="text-xs text-slate-500 mt-0.5">
-            Módulo 2 · Inspección con diagrama SVG, fotos comprimidas y hoja de recepción para firma
+            Ingreso de vehículos con fotos, daños marcados y hoja para firma del cliente
           </p>
         </div>
 
@@ -256,10 +255,8 @@ export const OrdenesList: React.FC<OrdenesListProps> = ({
 
       {/* Controles de Búsqueda y Filtros */}
       <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs space-y-3">
-        
         {/* Barra superior: Buscador + Filtros rápidos */}
         <div className="flex flex-col md:flex-row gap-3 items-stretch md:items-center justify-between">
-          
           {/* Buscador */}
           <div className="relative flex-1">
             <input
@@ -370,10 +367,8 @@ export const OrdenesList: React.FC<OrdenesListProps> = ({
                 className="bg-white rounded-xl border border-slate-200 p-4 sm:p-5 hover:border-slate-300 transition-colors shadow-xs"
               >
                 <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-4">
-                  
                   {/* Bloque Izquierdo: Datos Principales */}
                   <div className="space-y-2 flex-1 min-w-0">
-                    
                     {/* Fila 1: Folio, Prioridad, Estado, Fecha */}
                     <div className="flex flex-wrap items-center gap-2">
                       {/* Folio */}
@@ -500,8 +495,7 @@ export const OrdenesList: React.FC<OrdenesListProps> = ({
                   </div>
 
                   {/* Bloque Derecho: Acciones de la Orden */}
-                  <div className="flex flex-row lg:flex-col items-center lg:items-end justify-between lg:justify-start gap-2 shrink-0 pt-3 lg:pt-0 border-t lg:border-t-0 border-slate-100">
-                    
+                  <div className="flex flex-row flex-wrap lg:flex-nowrap lg:flex-col items-center lg:items-end justify-start gap-2 shrink-0 pt-3 lg:pt-0 border-t lg:border-t-0 border-slate-100">
                     {/* Botón Ver Detalle */}
                     <button
                       onClick={() => onVerDetalle(orden)}

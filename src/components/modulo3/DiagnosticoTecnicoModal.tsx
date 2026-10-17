@@ -289,7 +289,7 @@ export const DiagnosticoTecnicoModal: React.FC<DiagnosticoTecnicoModalProps> = (
       };
 
       await onGuardarDiagnostico(orden, payload);
-      setMensajeExito('Diagnóstico técnico guardado exitosamente en Firestore.');
+      setMensajeExito('Diagnóstico guardado.');
       setTimeout(() => setMensajeExito(null), 3500);
     } catch (err: any) {
       setErrorLocal(err?.message || 'Error al guardar el diagnóstico técnico');
@@ -875,7 +875,6 @@ export const DiagnosticoTecnicoModal: React.FC<DiagnosticoTecnicoModalProps> = (
                     <input
                       type="file"
                       accept="image/*"
-                      capture="environment"
                       onChange={handleCapturaFoto}
                       disabled={comprimiendoFoto}
                       className="w-full text-xs text-slate-500 file:mr-2 file:py-1 file:px-3 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-slate-900 file:text-white hover:file:bg-slate-800 cursor-pointer"
@@ -885,7 +884,7 @@ export const DiagnosticoTecnicoModal: React.FC<DiagnosticoTecnicoModalProps> = (
 
                 {comprimiendoFoto && (
                   <p className="text-xs text-blue-700 font-bold animate-pulse">
-                    Comprimiendo y guardando en Firestore...
+                    Comprimiendo y guardando...
                   </p>
                 )}
               </div>
@@ -985,7 +984,7 @@ export const DiagnosticoTecnicoModal: React.FC<DiagnosticoTecnicoModalProps> = (
                 Última edición por: <strong>{diagExistente.actualizadoPor}</strong>
               </span>
             ) : (
-              <span>Se guarda con auditoría atómica en Firestore</span>
+              <span>Queda registrado en la auditoría</span>
             )}
           </div>
 

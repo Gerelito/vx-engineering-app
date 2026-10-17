@@ -360,7 +360,7 @@ const RearmadoModal: React.FC<{ orden: OrdenServicio; usuarioActual: DuenoUsuari
       <ErrorCaja error={error} />
       <label className="w-full inline-flex items-center justify-center gap-2 py-3 rounded-xl border-2 border-dashed border-slate-300 text-sm font-bold cursor-pointer">
         {subiendo ? <Loader2 className="w-4 h-4 animate-spin" /> : <Camera className="w-4 h-4" />} Tomar foto del vehículo rearmado
-        <input type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => subir(e.target.files?.[0])} />
+        <input type="file" accept="image/*" className="hidden" onChange={(e) => subir(e.target.files?.[0])} />
       </label>
       {fotosIds.length > 0 && <p className="text-xs text-emerald-700 font-semibold">{fotosIds.length} foto(s) guardada(s)</p>}
       <textarea value={notas} onChange={(e) => setNotas(e.target.value)} placeholder="Notas (qué se volvió a montar)" rows={2} className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm" />

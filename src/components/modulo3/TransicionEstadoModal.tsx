@@ -88,7 +88,7 @@ export const TransicionEstadoModal: React.FC<TransicionEstadoModalProps> = ({
 
     if (!estaOnline) {
       setErrorLocal(
-        'Sin internet: los cambios de estado requieren conexión activa para sincronización transaccional con Firestore.'
+        'Sin internet: los cambios de estado necesitan conexión.'
       );
       return;
     }
@@ -161,7 +161,7 @@ export const TransicionEstadoModal: React.FC<TransicionEstadoModalProps> = ({
           <div className="bg-amber-50 border-b border-amber-200 p-3 flex items-center gap-2.5 text-xs text-amber-900">
             <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
             <span>
-              <strong>Sin conexión:</strong> Los cambios de estado requieren internet para registrarse en Firestore con auditoría de servidor.
+              <strong>Sin conexión:</strong> Los cambios de estado necesitan internet para quedar registrados.
             </span>
           </div>
         )}
@@ -357,7 +357,7 @@ export const TransicionEstadoModal: React.FC<TransicionEstadoModalProps> = ({
               className="px-4 py-2 text-xs font-bold text-white bg-slate-900 hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg shadow-sm transition-colors cursor-pointer flex items-center gap-1.5"
             >
               {guardando ? (
-                <span>Guardando en Firestore...</span>
+                <span>Guardando...</span>
               ) : (
                 <>
                   <PackageCheck className="w-4 h-4 text-amber-400" />

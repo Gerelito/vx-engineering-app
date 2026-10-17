@@ -151,7 +151,7 @@ export const ClienteModal: React.FC<ClienteModalProps> = ({
               {clienteEditar ? 'Editar Ficha del Cliente' : 'Nuevo Cliente (Registro Rápido)'}
             </h2>
             <p className="text-xs text-slate-400">
-              Módulo 1 · Bolivia · Registro mínimo con nombre y teléfono
+              Mínimo: nombre y teléfono
             </p>
           </div>
           <button
@@ -402,7 +402,7 @@ export const ClienteModal: React.FC<ClienteModalProps> = ({
                 <div>
                   <span className="text-xs font-bold text-slate-800 block">Consentimiento de Tratamiento de Datos</span>
                   <span className="text-[11px] text-slate-500">
-                    Documento firmado en papel escaneado o fotografiado (Módulo 1)
+                    Documento firmado en papel, escaneado o fotografiado
                   </span>
                 </div>
                 <span

@@ -225,7 +225,7 @@ export const ControlCalidadModal: React.FC<Props> = ({ orden, config, usuarioAct
               <label key={t} className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-slate-300 text-sm font-semibold cursor-pointer">
                 <Camera className="w-4 h-4" />
                 {t === 'final' ? 'Foto final del trabajo' : 'Foto piezas retiradas'}
-                <input type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => subirFoto(e.target.files?.[0], t)} />
+                <input type="file" accept="image/*" className="hidden" onChange={(e) => subirFoto(e.target.files?.[0], t)} />
               </label>
             ))}
             {subiendo && <Loader2 className="w-4 h-4 animate-spin" />}

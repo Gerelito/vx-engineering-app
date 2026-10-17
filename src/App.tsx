@@ -204,7 +204,7 @@ function TallerAppContent() {
 
     if (esPermiso) {
       setEstadoNube('error_permisos');
-      setErrorVisible(`Error de permisos en Firestore (${prefijo}): ${errMsg}`);
+      setErrorVisible(`Sin permiso para leer datos (${prefijo}): ${errMsg}`);
     } else {
       setEstadoNube('error_guardar');
       setErrorVisible(`Error al guardar (${prefijo}): ${errMsg}`);
@@ -446,7 +446,7 @@ function TallerAppContent() {
         setRecepcionClienteId(res.id);
       }
       mostrarNotificacion(
-        idExistente ? `Ficha de ${res.nombre} actualizada en Firestore` : `Cliente ${res.nombre} registrado en Firestore con auditoría atómica`
+        idExistente ? `Ficha de ${res.nombre} actualizada` : `Cliente ${res.nombre} registrado`
       );
     } catch (err: any) {
       manejarErrorFirestore(err, idExistente ? 'actualizar cliente' : 'guardar cliente');
@@ -507,7 +507,7 @@ function TallerAppContent() {
         setRecepcionVehiculoId(res.id);
       }
       mostrarNotificacion(
-        idExistente ? `Vehículo ${res.placa} actualizado en Firestore` : `Vehículo ${res.placa} registrado para ${propietario.nombre}`
+        idExistente ? `Vehículo ${res.placa} actualizado` : `Vehículo ${res.placa} registrado para ${propietario.nombre}`
       );
     } catch (err: any) {
       manejarErrorFirestore(err, idExistente ? 'actualizar vehículo' : 'guardar vehículo');

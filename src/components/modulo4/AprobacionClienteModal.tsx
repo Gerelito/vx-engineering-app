@@ -183,7 +183,7 @@ export const AprobacionClienteModal: React.FC<AprobacionClienteModalProps> = ({
       onClose();
     } catch (err: any) {
       console.error('Error registrando aprobación:', err);
-      setErrorLocal(err?.message || 'Error al registrar la aprobación en Firestore.');
+      setErrorLocal(err?.message || 'Error al registrar la aprobación.');
     } finally {
       setGuardando(false);
     }

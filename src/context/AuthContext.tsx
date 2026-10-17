@@ -82,7 +82,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUsuarioActual(null);
         setEsDuenoAutorizado(false);
         setErrorAcceso(
-          `Error de permisos en Firestore al verificar /config/acceso: ${err.message || 'Acceso denegado'}`
+          `No se pudo verificar el acceso: ${err.message || 'Acceso denegado'}`
         );
       } finally {
         setCargandoAuth(false);

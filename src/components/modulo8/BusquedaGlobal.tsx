@@ -23,11 +23,15 @@ export const BusquedaGlobal: React.FC<Props> = ({ clientes, vehiculos, ordenes, 
   const resultados = useMemo(() => buscarGlobal(texto, { clientes, vehiculos, ordenes }), [texto, clientes, vehiculos, ordenes]);
 
   useEffect(() => {
-    const fuera = (e: MouseEvent) => {
+    const fuera = (e: MouseEvent | TouchEvent) => {
       if (caja.current && !caja.current.contains(e.target as Node)) setAbierto(false);
     };
     document.addEventListener('mousedown', fuera);
-    return () => document.removeEventListener('mousedown', fuera);
+    document.addEventListener('touchstart', fuera, { passive: true });
+    return () => {
+      document.removeEventListener('mousedown', fuera);
+      document.removeEventListener('touchstart', fuera);
+    };
   }, []);
 
   const elegir = (r: ResultadoBusqueda) => {

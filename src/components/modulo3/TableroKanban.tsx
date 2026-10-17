@@ -170,7 +170,7 @@ export const TableroKanban: React.FC<TableroKanbanProps> = ({
                 )}
               </div>
               <p className="text-xs text-slate-500">
-                Flujo visual por estados · Alertas automáticas en rojo · Asignación de bahías
+                Cada columna es un estado. En rojo: órdenes que pasaron el tiempo límite.
               </p>
             </div>
           </div>
@@ -183,13 +183,13 @@ export const TableroKanban: React.FC<TableroKanbanProps> = ({
               className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition-colors shadow-sm flex items-center gap-1.5 cursor-pointer"
             >
               <Plus className="w-4 h-4 text-amber-400" />
-              <span>+ Nueva Recepción</span>
+              <span>Nueva Recepción</span>
             </button>
           </div>
         </div>
 
         {/* Fila de Controles de Filtros */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 pt-2 border-t border-slate-100 text-xs">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 pt-2 border-t border-slate-100 text-xs">
           {/* Buscador */}
           <div className="relative">
             <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
@@ -235,11 +235,11 @@ export const TableroKanban: React.FC<TableroKanbanProps> = ({
           </div>
 
           {/* Filtro por Prioridad y Toggle de Finalizadas */}
-          <div className="flex items-center gap-2">
+          <div className="col-span-full flex flex-wrap items-center gap-2">
             <select
               value={filtroPrioridad}
               onChange={(e: any) => setFiltroPrioridad(e.target.value)}
-              className="w-full px-3 py-2 bg-slate-50 rounded-lg border border-slate-200 focus:bg-white font-medium"
+              className="flex-1 min-w-[150px] sm:flex-none sm:w-56 px-3 py-2 bg-slate-50 rounded-lg border border-slate-200 focus:bg-white font-medium"
             >
               <option value="Todas">Todas las Prioridades</option>
               <option value="Solo Urgentes">Solo Urgentes 🚨</option>

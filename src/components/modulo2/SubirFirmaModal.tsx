@@ -141,7 +141,6 @@ export const SubirFirmaModal: React.FC<SubirFirmaModalProps> = ({
                   <input
                     type="file"
                     accept="image/*"
-                    capture="environment"
                     onChange={handleSeleccionarArchivo}
                     className="hidden"
                   />
@@ -160,7 +159,6 @@ export const SubirFirmaModal: React.FC<SubirFirmaModalProps> = ({
               <input
                 type="file"
                 accept="image/*"
-                capture="environment"
                 onChange={handleSeleccionarArchivo}
                 className="hidden"
               />

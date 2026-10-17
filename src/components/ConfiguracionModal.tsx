@@ -136,7 +136,7 @@ export const ConfiguracionModal: React.FC<ConfiguracionModalProps> = ({
       setNuevoEmailDueno('');
       notificarExito(`Dueño autorizado agregado: ${emailLimpio}`);
     } catch (err: any) {
-      onError(`Error al agregar dueño: ${err.message || 'Fallo de permisos en Firestore'}`);
+      onError(`Error al agregar dueño: ${err.message || 'Sin permiso'}`);
     } finally {
       setGuardandoDuenos(false);
     }
@@ -149,7 +149,7 @@ export const ConfiguracionModal: React.FC<ConfiguracionModalProps> = ({
       await modificarDuenos(nuevaLista);
       notificarExito(`Dueño removido: ${emailAEliminar}`);
     } catch (err: any) {
-      onError(`Error al remover dueño: ${err.message || 'Fallo de permisos en Firestore'}`);
+      onError(`Error al remover dueño: ${err.message || 'Sin permiso'}`);
     } finally {
       setGuardandoDuenos(false);
     }
@@ -253,9 +253,9 @@ export const ConfiguracionModal: React.FC<ConfiguracionModalProps> = ({
 
       await guardarConfiguracionTaller(nueva, usuarioActual);
       onUpdateConfig(nueva);
-      notificarExito('Configuración del taller guardada en Firestore.');
+      notificarExito('Configuración guardada.');
     } catch (err: any) {
-      onError(`Error al guardar configuración: ${err.message || 'Fallo de permisos en Firestore'}`);
+      onError(`Error al guardar configuración: ${err.message || 'Sin permiso'}`);
     } finally {
       setGuardandoConfig(false);
     }
@@ -365,7 +365,7 @@ export const ConfiguracionModal: React.FC<ConfiguracionModalProps> = ({
                 <div className="flex items-center gap-2">
                   <Users className="w-4 h-4 text-slate-700" />
                   <h3 className="text-sm font-bold text-slate-900">
-                    Cuentas de Dueños Autorizados (/config/acceso)
+                    Cuentas de dueños autorizados
                   </h3>
                 </div>
                 <span className="text-[11px] font-mono font-semibold px-2 py-0.5 bg-slate-200 rounded text-slate-700">

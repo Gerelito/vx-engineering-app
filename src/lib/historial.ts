@@ -70,6 +70,15 @@ function puntuar(q: string, campos: { valor: string; tolerante?: boolean }[]): n
       // placa, teléfono, folio, VIN: un error de tipeo (o el mismo prefijo con un error)
       const d = Math.min(levenshtein(v, q, 1), q.length < v.length ? levenshtein(v.slice(0, q.length), q, 1) : 9);
       if (d <= 1) p = 1 + d;
+    } else if (!c.tolerante && q.length >= 4) {
+      // nombres y marcas: un error de tipeo en alguna palabra ("prueva" encuentra "Prueba")
+      for (const palabra of String(c.valor).split(/\s+/).map(normalizar).filter((x) => x.length >= 3)) {
+        const d = Math.min(levenshtein(palabra, q, 1), q.length < palabra.length ? levenshtein(palabra.slice(0, q.length), q, 1) : 9);
+        if (d <= 1) {
+          p = 2 + d;
+          break;
+        }
+      }
     }
     if (p !== null && (mejor === null || p < mejor)) mejor = p;
   }

@@ -78,47 +78,47 @@ export const ClientesList: React.FC<ClientesListProps> = ({
     <div className="space-y-6">
       
       {/* Resumen superior */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
-          <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block">
-            Clientes Activos en Firestore
+      <div className="grid grid-cols-3 gap-2 sm:gap-4">
+        <div className="bg-white p-3 sm:p-4 rounded-xl border border-slate-200 shadow-xs">
+          <span className="text-[10px] sm:text-[11px] font-semibold text-slate-500 uppercase tracking-wider block leading-tight">
+            Clientes activos
           </span>
           <span className="text-2xl font-bold font-mono text-slate-900 mt-1 block">
             {totalActivos}
           </span>
-          <span className="text-xs text-slate-500 mt-0.5 block">
-            Ficha única sin duplicados por teléfono
+          <span className="text-xs text-slate-500 mt-0.5 hidden sm:block">
+            Una ficha por cliente (sin duplicar teléfono)
           </span>
         </div>
 
-        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
-          <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block">
-            Consentimiento Pendiente
+        <div className="bg-white p-3 sm:p-4 rounded-xl border border-slate-200 shadow-xs">
+          <span className="text-[10px] sm:text-[11px] font-semibold text-slate-500 uppercase tracking-wider block leading-tight">
+            Sin consentimiento
           </span>
           <div className="flex items-center gap-2 mt-1">
             <span className={`text-2xl font-bold font-mono ${totalPendientesConsentimiento > 0 ? 'text-amber-600' : 'text-emerald-600'}`}>
               {totalPendientesConsentimiento}
             </span>
             {totalPendientesConsentimiento > 0 && (
-              <span className="text-[10px] font-bold bg-amber-100 text-amber-800 px-2 py-0.5 rounded">
-                Requiere documento firmado
+              <span className="hidden sm:inline text-[10px] font-bold bg-amber-100 text-amber-800 px-2 py-0.5 rounded">
+                Falta firmar
               </span>
             )}
           </div>
-          <span className="text-xs text-slate-500 mt-0.5 block">
-            Archivos comprimidos en base de datos
+          <span className="text-xs text-slate-500 mt-0.5 hidden sm:block">
+            Clientes que aún no firmaron el consentimiento de datos
           </span>
         </div>
 
-        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
-          <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block">
-            Vehículos en Taller
+        <div className="bg-white p-3 sm:p-4 rounded-xl border border-slate-200 shadow-xs">
+          <span className="text-[10px] sm:text-[11px] font-semibold text-slate-500 uppercase tracking-wider block leading-tight">
+            Vehículos registrados
           </span>
           <span className="text-2xl font-bold font-mono text-slate-900 mt-1 block">
             {vehiculos.filter((v) => v.activo !== false).length}
           </span>
-          <span className="text-xs text-slate-500 mt-0.5 block">
-            Hoja de vida técnica central
+          <span className="text-xs text-slate-500 mt-0.5 hidden sm:block">
+            Cada uno con su hoja de vida
           </span>
         </div>
       </div>
@@ -170,7 +170,7 @@ export const ClientesList: React.FC<ClientesListProps> = ({
               filtroTipo === 'pendiente' ? 'bg-white text-amber-900 shadow-xs font-bold' : 'text-slate-600 hover:text-slate-900'
             }`}
           >
-            Consentimiento Pendiente ({totalPendientesConsentimiento})
+            Sin consentimiento ({totalPendientesConsentimiento})
           </button>
           {totalInactivos > 0 && (
             <button
@@ -192,7 +192,7 @@ export const ClientesList: React.FC<ClientesListProps> = ({
           <div className="bg-white rounded-xl border border-slate-200 p-8 text-center">
             <User className="w-8 h-8 text-slate-300 mx-auto mb-2" />
             <h3 className="text-sm font-semibold text-slate-800">
-              {clientes.length === 0 ? 'Base de datos en Firestore vacía' : 'No se encontraron clientes con los filtros aplicados'}
+              {clientes.length === 0 ? 'Todavía no hay clientes registrados' : 'No se encontraron clientes con los filtros aplicados'}
             </h3>
             <p className="text-xs text-slate-500 mt-1">
               {clientes.length === 0
@@ -261,7 +261,7 @@ export const ClientesList: React.FC<ClientesListProps> = ({
                           type="button"
                           onClick={() => onSubirConsentimiento(cliente)}
                           className="text-[11px] text-emerald-700 font-semibold bg-emerald-50 hover:bg-emerald-100 px-2 py-0.5 rounded inline-flex items-center gap-1 transition-colors cursor-pointer"
-                          title="Ver documento firmado en Firestore"
+                          title="Ver documento firmado"
                         >
                           <CheckCircle2 className="w-3 h-3 text-emerald-600" />
                           <span>Consentimiento firmado (Ver)</span>
@@ -371,7 +371,7 @@ export const ClientesList: React.FC<ClientesListProps> = ({
                       <button
                         onClick={() => onDesactivarCliente(cliente)}
                         className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
-                        title="Desactivar cliente (en Firestore con activo: false)"
+                        title="Desactivar cliente"
                       >
                         <UserX className="w-4 h-4" />
                       </button>

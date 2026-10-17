@@ -204,7 +204,6 @@ export const TrabajoAdicionalModal: React.FC<TrabajoAdicionalModalProps> = ({
             <input
               type="file"
               accept="image/*"
-              capture="environment"
               onChange={handleFotoCapture}
               disabled={comprimiendo}
               className="w-full text-xs text-slate-500 file:mr-2 file:py-1 file:px-3 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-slate-900 file:text-white hover:file:bg-slate-800"

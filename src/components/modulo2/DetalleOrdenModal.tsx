@@ -96,15 +96,15 @@ export const DetalleOrdenModal: React.FC<DetalleOrdenModalProps> = ({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-900/60 backdrop-blur-xs overflow-y-auto">
       <div className="w-full max-w-4xl max-h-[92vh] bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col my-auto">
         {/* Encabezado */}
-        <div className="px-5 py-4 bg-slate-900 text-white flex items-center justify-between shrink-0">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-amber-400 font-mono font-bold text-sm">
+        <div className="px-4 sm:px-5 py-3 sm:py-4 bg-slate-900 text-white flex items-center justify-between gap-2 shrink-0">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="hidden sm:flex shrink-0 w-9 h-9 rounded-xl bg-amber-500/20 border border-amber-500/30 text-amber-400 font-mono font-bold text-sm items-center justify-center">
               {orden.folio.startsWith('OS-') ? orden.folio.slice(3) : 'PEND'}
             </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h3 className="text-sm sm:text-base font-bold">
-                  Orden de Servicio {orden.folio}
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h3 className="text-sm sm:text-base font-bold whitespace-nowrap">
+                  <span className="hidden sm:inline">Orden de Servicio </span>{orden.folio}
                 </h3>
                 {orden.sincronizacionFolio === 'pendiente' && (
                   <span className="text-[10px] font-bold bg-amber-500 text-slate-950 px-2 py-0.5 rounded-full">
@@ -112,20 +112,21 @@ export const DetalleOrdenModal: React.FC<DetalleOrdenModalProps> = ({
                   </span>
                 )}
               </div>
-              <p className="text-[11px] text-slate-300">
+              <p className="text-[11px] text-slate-300 truncate sm:whitespace-normal">
                 Placa: {orden.vehiculoPlaca} · Cliente: {orden.clienteNombre} · Ingreso: {formatearFecha(orden.createdAt || orden.fechaCreacion)}
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
             {onAbrirDocumento && (
               <button
                 onClick={() => onAbrirDocumento(orden)}
                 className="flex items-center gap-1.5 px-3 py-1.5 bg-green-600 hover:bg-green-500 text-white rounded-lg text-xs font-bold transition-colors cursor-pointer"
               >
                 <MessageCircle className="w-4 h-4" />
-                <span>PDF / WhatsApp</span>
+                <span className="sm:hidden">Enviar</span>
+                <span className="hidden sm:inline">PDF / WhatsApp</span>
               </button>
             )}
             <button
@@ -197,7 +198,7 @@ export const DetalleOrdenModal: React.FC<DetalleOrdenModalProps> = ({
                 title="Registrar hallazgo adicional o trabajo complementario en taller"
               >
                 <Plus className="w-3.5 h-3.5 text-purple-700" />
-                <span>+ Hallazgo ({orden.hallazgosAdicionales?.length || 0})</span>
+                <span>Hallazgo ({orden.hallazgosAdicionales?.length || 0})</span>
               </button>
             )}
 
@@ -328,7 +329,7 @@ export const DetalleOrdenModal: React.FC<DetalleOrdenModalProps> = ({
               <div className="flex items-center gap-2">
                 <FileCheck className="w-4 h-4 text-amber-600" />
                 <span className="text-xs font-bold text-slate-900">
-                  Cotizaciones y Aprobaciones del Cliente (Módulo 4)
+                  Cotizaciones y aprobaciones del cliente
                 </span>
               </div>
               <div className="flex items-center gap-2 flex-wrap">
@@ -476,7 +477,7 @@ export const DetalleOrdenModal: React.FC<DetalleOrdenModalProps> = ({
                 )}
 
                 <div className="text-[10px] text-slate-400 italic pt-1">
-                  Enlace listo para vincular con la Cotización Complementaria del Módulo 4.
+                  Agrégalo a una cotización complementaria para que el cliente lo apruebe.
                 </div>
               </div>
             );

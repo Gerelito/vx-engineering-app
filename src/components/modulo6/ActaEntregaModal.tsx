@@ -295,7 +295,7 @@ export const ActaEntregaModal: React.FC<Props> = ({ orden, tipo, config, usuario
                         ) : (
                           <label className="h-20 flex items-center justify-center gap-1 border-2 border-dashed border-slate-300 rounded-lg text-xs font-semibold text-slate-600 cursor-pointer">
                             {subiendo === p.salida ? <Loader2 className="w-4 h-4 animate-spin" /> : <Camera className="w-4 h-4" />} Tomar foto
-                            <input type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => subirFoto(e.target.files?.[0], p.salida, `Salida: ${p.texto}`)} />
+                            <input type="file" accept="image/*" className="hidden" onChange={(e) => subirFoto(e.target.files?.[0], p.salida, `Salida: ${p.texto}`)} />
                           </label>
                         )}
                       </div>
@@ -426,7 +426,7 @@ const ActaImprimible: React.FC<{
         ) : (
           <label className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-slate-900 text-white text-sm font-bold cursor-pointer">
             {subiendo ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileSignature className="w-4 h-4" />} Subir foto del acta firmada
-            <input type="file" accept="image/*,application/pdf" capture="environment" className="hidden" onChange={(e) => onSubirFirma(e.target.files?.[0])} />
+            <input type="file" accept="image/*,application/pdf" className="hidden" onChange={(e) => onSubirFirma(e.target.files?.[0])} />
           </label>
         )}
       </div>
