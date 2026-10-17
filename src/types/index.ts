@@ -165,6 +165,10 @@ export interface FotoOrden {
   usuarioNombre: string;
   auditoriaId: string;
   reemplazada?: boolean;
+  // Módulo 8: corrección de fotos (la anterior se conserva)
+  reemplazaFotoId?: string | null;
+  reemplazadaPorId?: string | null;
+  motivoReemplazo?: string | null;
 }
 
 export interface AccesoriosChecklist {
@@ -419,6 +423,7 @@ export interface OrdenServicio {
   avisoCliente?: AvisoCliente | null;
   actaEntrega?: ActaEntrega | null;
   cancelacion?: CancelacionOrden | null;
+  correcciones?: CorreccionOrden[];
 
   // Metadatos
   creadoPorUid: string;
@@ -553,6 +558,10 @@ export interface ItemCotizacion {
   codigoManoObra?: string | null;
   horasManoObra?: number | null;
   tarifaHoraBs?: number | null;
+
+  // Módulo 8: componente (para la vista de componentes del historial) y serial del repuesto
+  componente?: CategoriaComponente | null;
+  serialRepuesto?: string | null;
 
   // Repuesto
   marcaRepuesto?: string | null;
@@ -858,4 +867,32 @@ export interface CancelacionOrden {
   seguimientoRealizado?: boolean;
   seguimientoNota?: string | null;
   fechaCierre?: string | null;
+}
+
+// -------------------------------------------------------------
+// MÓDULO 8: HISTORIAL
+// -------------------------------------------------------------
+
+export type CategoriaComponente =
+  | 'aceite'
+  | 'filtro_aceite'
+  | 'filtro_aire'
+  | 'filtro_combustible'
+  | 'filtro_cabina'
+  | 'frenos_delanteros'
+  | 'frenos_traseros'
+  | 'bateria'
+  | 'correa_distribucion'
+  | 'neumaticos'
+  | 'otro';
+
+export interface CorreccionOrden {
+  id: string;
+  fecha: string;
+  campo: string;
+  antes: any;
+  despues: any;
+  motivo: string;
+  registradoPorNombre: string;
+  registradoPorEmail: string;
 }

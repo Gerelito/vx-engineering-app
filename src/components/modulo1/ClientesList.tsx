@@ -15,6 +15,7 @@ import {
   ExternalLink,
   UserX,
   FileText,
+  History,
 } from 'lucide-react';
 
 interface ClientesListProps {
@@ -26,6 +27,7 @@ interface ClientesListProps {
   onSubirConsentimiento: (cliente: Cliente) => void;
   onDesactivarCliente: (cliente: Cliente) => void;
   onVerVehiculo: (vehiculo: Vehiculo) => void;
+  onVerFicha?: (cliente: Cliente) => void;
 }
 
 export const ClientesList: React.FC<ClientesListProps> = ({
@@ -37,6 +39,7 @@ export const ClientesList: React.FC<ClientesListProps> = ({
   onSubirConsentimiento,
   onDesactivarCliente,
   onVerVehiculo,
+  onVerFicha,
 }) => {
   const [busqueda, setBusqueda] = useState('');
   const [filtroTipo, setFiltroTipo] = useState<'todos' | 'Particular' | 'Empresa' | 'pendiente' | 'inactivos'>('todos');
@@ -342,6 +345,17 @@ export const ClientesList: React.FC<ClientesListProps> = ({
                       <Plus className="w-3.5 h-3.5 text-slate-500" />
                       <span>Vehículo</span>
                     </button>
+
+                    {onVerFicha && (
+                      <button
+                        onClick={() => onVerFicha(cliente)}
+                        className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 rounded-lg cursor-pointer"
+                        title="Historial, órdenes y contactos del cliente"
+                      >
+                        <History className="w-3.5 h-3.5 text-slate-500" />
+                        <span>Historial</span>
+                      </button>
+                    )}
 
                     {/* Botón Editar Ficha */}
                     <button

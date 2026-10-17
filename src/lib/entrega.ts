@@ -317,6 +317,9 @@ export async function entregarVehiculoFirestore(
     const snap = await tx.get(ordenRef);
     if (!snap.exists()) throw new Error('La orden ya no existe.');
     const orden = { ...(snap.data() as OrdenServicio), id: ordenId };
+    // Las lecturas van antes que las escrituras: kilometraje actual del vehículo
+    const vehiculoRef = orden.vehiculoId ? doc(db, 'vehiculos', orden.vehiculoId) : null;
+    const vehSnap = vehiculoRef ? await tx.get(vehiculoRef) : null;
 
     if (tipo === 'entrega' && orden.estado !== 'Listo para entrega') {
       throw new Error('Solo se puede entregar una orden en estado "Listo para entrega".');
@@ -422,6 +425,19 @@ export async function entregarVehiculoFirestore(
     update.auditoriaId = auditId;
     tx.update(ordenRef, limpiarUndefined(update));
     sincronizarVerificacion(tx, orden, update.estado || orden.estado, auditId);
+    // Módulo 8: el vehículo guarda el último kilometraje conocido
+    const kmAnterior = vehSnap?.exists() ? Number(vehSnap.data().ultimoKilometraje || 0) : null;
+    if (vehiculoRef && kmAnterior !== null && datos.kmSalida > kmAnterior) {
+      const auditVeh = escribirAuditoria(tx, dueno, {
+        modulo: 'Vehículos',
+        accion: 'Modificación',
+        entidad: 'vehiculos',
+        entidadId: orden.vehiculoId,
+        antes: { ultimoKilometraje: kmAnterior },
+        despues: { ultimoKilometraje: datos.kmSalida, motivo: `Salida ${orden.folio}` },
+      });
+      tx.update(vehiculoRef, { ultimoKilometraje: datos.kmSalida, auditoriaId: auditVeh, updatedAt: new Date().toISOString() });
+    }
     return acta;
   });
 }

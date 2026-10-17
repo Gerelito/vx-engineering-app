@@ -72,6 +72,10 @@ import { db } from './lib/firebase';
 import { CajaView } from './components/modulo5/CajaView';
 import { VerificacionPublica } from './components/modulo7/VerificacionPublica';
 import { DocumentoEnvioModal } from './components/modulo7/DocumentoEnvioModal';
+import { BusquedaGlobal } from './components/modulo8/BusquedaGlobal';
+import { HistorialVehiculoModal } from './components/modulo8/HistorialVehiculoModal';
+import { FichaClienteModal } from './components/modulo8/FichaClienteModal';
+import { descargarBlob } from './lib/envios';
 import type { TipoDocumentoPublico } from './lib/verificacion';
 import { EntregasView } from './components/modulo6/EntregasView';
 import { ControlCalidadModal } from './components/modulo6/ControlCalidadModal';
@@ -127,6 +131,9 @@ function TallerAppContent() {
   // Modales operativos de Recepción y Órdenes (Módulo 2)
   const [modalRecepcionAbierto, setModalRecepcionAbierto] = useState(false);
   const [ordenDetalle, setOrdenDetalle] = useState<OrdenServicio | null>(null);
+  // Módulo 8: historial
+  const [historialVehiculoId, setHistorialVehiculoId] = useState<string | null>(null);
+  const [fichaClienteId, setFichaClienteId] = useState<string | null>(null);
   const [ordenImprimir, setOrdenImprimir] = useState<OrdenServicio | null>(null);
   const [ordenSubirFirma, setOrdenSubirFirma] = useState<OrdenServicio | null>(null);
   const [sincronizandoFolios, setSincronizandoFolios] = useState(false);
@@ -777,7 +784,22 @@ function TallerAppContent() {
 
       {/* Contenido Principal */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        
+        <div className="mb-4">
+          <BusquedaGlobal
+            clientes={clientes}
+            vehiculos={vehiculos}
+            ordenes={ordenes}
+            onElegir={(r) => {
+              if (r.tipo === 'vehiculo') setHistorialVehiculoId(r.id);
+              else if (r.tipo === 'cliente') setFichaClienteId(r.id);
+              else {
+                const o = ordenes.find((x) => x.id === r.id);
+                if (o) setOrdenDetalle(o);
+              }
+            }}
+          />
+        </div>
+
         {/* Renderizado de la Vista Seleccionada */}
         {vistaActiva === 'recepciones' && (
           <OrdenesList
@@ -888,9 +910,8 @@ function TallerAppContent() {
               setModalConsentimientoAbierto(true);
             }}
             onDesactivarCliente={handleDesactivarCliente}
-            onVerVehiculo={() => {
-              setVistaActiva('vehiculos');
-            }}
+            onVerVehiculo={(v) => setHistorialVehiculoId(v.id)}
+            onVerFicha={(c) => setFichaClienteId(c.id)}
           />
         )}
 
@@ -913,9 +934,8 @@ function TallerAppContent() {
               setModalCambioPropAbierto(true);
             }}
             onDesactivarVehiculo={handleDesactivarVehiculo}
-            onVerCliente={() => {
-              setVistaActiva('clientes');
-            }}
+            onVerCliente={(clienteId) => setFichaClienteId(clienteId)}
+            onVerHistorial={(v) => setHistorialVehiculoId(v.id)}
           />
         )}
 
@@ -959,7 +979,8 @@ function TallerAppContent() {
       />
 
       <DetalleOrdenModal
-        orden={ordenDetalle}
+        orden={ordenDetalle ? ordenes.find((o) => o.id === ordenDetalle.id) || ordenDetalle : null}
+        usuarioActual={usuarioActual}
         config={config}
         isOpen={ordenDetalle !== null}
         onClose={() => setOrdenDetalle(null)}
@@ -1239,6 +1260,41 @@ function TallerAppContent() {
             setDocumentoAbierto({ ordenId: ord.id, tipo: ord.actaEntrega?.tipo === 'devolucion' ? 'acta_devolucion' : 'acta_entrega' })
           }
           onExito={(m) => mostrarNotificacion(m)}
+        />
+      )}
+      {/* MODALES DEL MÓDULO 8: HISTORIAL */}
+      {fichaClienteId && usuarioActual && clientes.find((c) => c.id === fichaClienteId) && (
+        <FichaClienteModal
+          cliente={clientes.find((c) => c.id === fichaClienteId)!}
+          vehiculos={vehiculos}
+          ordenes={ordenes}
+          usuarioActual={usuarioActual}
+          onAbrirVehiculo={(v) => setHistorialVehiculoId(v.id)}
+          onAbrirOrden={(o) => setOrdenDetalle(o)}
+          onClose={() => setFichaClienteId(null)}
+          onExito={(m) => mostrarNotificacion(m)}
+        />
+      )}
+      {historialVehiculoId && usuarioActual && vehiculos.find((v) => v.id === historialVehiculoId) && (
+        <HistorialVehiculoModal
+          vehiculo={vehiculos.find((v) => v.id === historialVehiculoId)!}
+          clientes={clientes}
+          ordenes={ordenes}
+          config={config}
+          usuarioActual={usuarioActual}
+          onAbrirOrden={(o) => setOrdenDetalle(o)}
+          onInformePdf={async (v, visitas) => {
+            try {
+              const m = await import('./lib/documentos');
+              const prop = clientes.find((c) => c.id === v.propietarioActualId);
+              const r = await m.generarPdfHistorialVehiculo(v, prop ? { nombre: prop.nombre, telefono: prop.telefono } : null, visitas, config);
+              descargarBlob(r.blob, r.nombre);
+              mostrarNotificacion(`Informe ${r.nombre} descargado.`);
+            } catch (e: any) {
+              setErrorVisible(`No se pudo generar el informe: ${e?.message || e}`);
+            }
+          }}
+          onClose={() => setHistorialVehiculoId(null)}
         />
       )}
       {documentoAbierto && usuarioActual && ordenes.find((o) => o.id === documentoAbierto.ordenId) && (

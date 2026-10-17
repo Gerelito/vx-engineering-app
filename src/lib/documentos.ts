@@ -862,3 +862,82 @@ export async function generarPdfActa(orden: OrdenServicio, config: TallerConfig)
   L.pies();
   return { blob: L.doc.output('blob'), nombre: nombreArchivo(tipo, orden), url: urlVerificacion(config, orden, tipo) };
 }
+
+/** Informe de historial del vehículo (Módulo 8). Sin costos internos ni notas internas. */
+export async function generarPdfHistorialVehiculo(
+  vehiculo: import('../types').Vehiculo,
+  propietario: { nombre: string; telefono: string } | null,
+  visitas: import('./historial').Visita[],
+  config: TallerConfig
+): Promise<{ blob: Blob; nombre: string }> {
+  const { ultimosComponentes, alertasVehiculo } = await import('./historial');
+  const L = new Lienzo(config, vehiculo.placa);
+  await L.encabezado('Historial del vehículo', [`Emitido: ${fechaHoraBo(new Date())}`, `Visitas: ${visitas.length}`]);
+  L.tarjetas(
+    {
+      titulo: 'Vehículo',
+      filas: [
+        ['Vehículo', `${vehiculo.marca} ${vehiculo.modelo}${vehiculo.anio ? ` · ${vehiculo.anio}` : ''}`],
+        ['Placa', vehiculo.placa],
+        ...(vehiculo.vin ? ([['VIN / chasis', vehiculo.vin]] as [string, string][]) : []),
+        ['Último km', vehiculo.ultimoKilometraje ? `${bs(vehiculo.ultimoKilometraje).replace(/,00$/, '')} km` : '—'],
+      ],
+    },
+    {
+      titulo: 'Propietario y documentos',
+      filas: [
+        ['Propietario', propietario?.nombre || '—'],
+        ['Teléfono', propietario?.telefono || '—'],
+        ['SOAT vence', vehiculo.vencimientoSoat || '—'],
+        ['ITV vence', vehiculo.vencimientoItv || '—'],
+      ],
+    }
+  );
+
+  const alertas = alertasVehiculo(vehiculo, visitas).filter((a) => !a.texto.startsWith('Saldo'));
+  if (alertas.length) L.nota(alertas.map((a) => a.texto).join('\n'));
+
+  L.espacio(14);
+  L.titulo('Visitas al taller');
+  L.y += 4.5;
+  const filas = visitas.map((v) => {
+    const trabajos = v.trabajos.map((t) => `${t.descripcion}${t.marcaRepuesto ? ` (${t.marcaRepuesto}${t.serialRepuesto ? `, S/N ${t.serialRepuesto}` : ''})` : ''}`);
+    const desc = `${v.orden.folio} · ${v.orden.estado}\nMotivo: ${v.orden.motivoCliente}${trabajos.length ? `\nTrabajos: ${trabajos.join('; ')}` : ''}`;
+    return [desc, fechaHoraBo(v.ingresoMs, false), `${bs(v.orden.kilometraje).replace(/,00$/, '')}`, v.totalBs === null ? 'Por definir' : bs(v.totalBs)];
+  });
+  if (filas.length) {
+    L.tabla(
+      [{ titulo: 'Visita' }, { titulo: 'Ingreso', ancho: 22 }, { titulo: 'Km', ancho: 20, derecha: true }, { titulo: 'Monto (Bs)', ancho: 24, derecha: true }],
+      filas,
+      { tam: 8.2 }
+    );
+  } else {
+    L.fuente(8.8, 'italic', GRIS);
+    L.texto('Todavía no hay visitas registradas.', PAGINA.izq + 1.5, L.y);
+    L.y += 6;
+  }
+
+  const comps = ultimosComponentes(visitas).filter((c) => c.fechaMs);
+  if (comps.length) {
+    L.espacio(14);
+    L.titulo('Último cambio de componentes');
+    L.y += 4.5;
+    L.tabla(
+      [{ titulo: 'Componente' }, { titulo: 'Fecha', ancho: 22 }, { titulo: 'Km', ancho: 22, derecha: true }, { titulo: 'Orden', ancho: 24 }],
+      comps.map((c) => [`${c.texto}${c.detalle ? ` · ${c.detalle}` : ''}`, fechaHoraBo(c.fechaMs, false), c.km ? bs(c.km).replace(/,00$/, '') : '—', c.folio || '—']),
+      { tam: 8.2 }
+    );
+  }
+
+  const pendientes: string[] = [];
+  visitas.forEach((v, i) => {
+    const hechas = visitas.slice(0, i).flatMap((x) => x.trabajos.map((t) => t.descripcion.toLowerCase()));
+    v.recomendaciones.forEach((r) => {
+      if (!hechas.includes(r.toLowerCase()) && !pendientes.includes(r)) pendientes.push(r);
+    });
+  });
+  L.recomendaciones(pendientes);
+  L.pies();
+  const nombre = `Historial-${vehiculo.placa}.pdf`.replace(/[^\w.-]+/g, '_');
+  return { blob: L.doc.output('blob'), nombre };
+}

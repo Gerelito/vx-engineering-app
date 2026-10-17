@@ -9,6 +9,7 @@ import {
   Edit2,
   Trash2,
   XCircle,
+  History,
 } from 'lucide-react';
 
 interface VehiculosListProps {
@@ -19,6 +20,7 @@ interface VehiculosListProps {
   onCambiarPropietario: (vehiculo: Vehiculo) => void;
   onDesactivarVehiculo: (vehiculo: Vehiculo) => void;
   onVerCliente: (clienteId: string) => void;
+  onVerHistorial?: (vehiculo: Vehiculo) => void;
 }
 
 export const VehiculosList: React.FC<VehiculosListProps> = ({
@@ -29,6 +31,7 @@ export const VehiculosList: React.FC<VehiculosListProps> = ({
   onCambiarPropietario,
   onDesactivarVehiculo,
   onVerCliente,
+  onVerHistorial,
 }) => {
   const [busqueda, setBusqueda] = useState('');
   const [filtroCombustible, setFiltroCombustible] = useState<string>('todos');
@@ -315,7 +318,18 @@ export const VehiculosList: React.FC<VehiculosListProps> = ({
                   </div>
 
                   {/* Acciones */}
-                  <div className="flex flex-row lg:flex-col gap-2 shrink-0 pt-2 lg:pt-0">
+                  <div className="flex flex-row flex-wrap lg:flex-col gap-2 shrink-0 pt-2 lg:pt-0">
+                    {onVerHistorial && (
+                      <button
+                        type="button"
+                        onClick={() => onVerHistorial(vehiculo)}
+                        className="inline-flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-bold text-white bg-slate-900 hover:bg-slate-800 rounded-lg whitespace-nowrap cursor-pointer"
+                        title="Hoja de vida del vehículo"
+                      >
+                        <History className="w-3.5 h-3.5" />
+                        <span>Hoja de vida</span>
+                      </button>
+                    )}
                     <button
                       type="button"
                       onClick={() => onCambiarPropietario(vehiculo)}

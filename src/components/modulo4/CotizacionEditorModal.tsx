@@ -11,6 +11,7 @@ import {
   PlantillaCotizacion,
   DuenoUsuario,
 } from '../../types';
+import { COMPONENTES } from '../../lib/historial';
 import {
   formatearFecha,
   formatearMonedaBs,
@@ -806,6 +807,8 @@ const ModalEditarItem: React.FC<ModalEditarItemProps> = ({
 
   // Repuesto
   const [marcaRepuesto, setMarcaRepuesto] = useState(itemInicial?.marcaRepuesto || '');
+  const [serialRepuesto, setSerialRepuesto] = useState(itemInicial?.serialRepuesto || '');
+  const [componente, setComponente] = useState<string>(itemInicial?.componente || '');
   const [calidadRepuesto, setCalidadRepuesto] = useState<CalidadRepuesto>(
     itemInicial?.calidadRepuesto || 'original'
   );
@@ -888,6 +891,8 @@ const ModalEditarItem: React.FC<ModalEditarItemProps> = ({
       tarifaHoraBs: tipo === 'mano_obra' ? tarifaHoraBs : null,
 
       marcaRepuesto: tipo === 'repuesto' ? marcaRepuesto.trim() || null : null,
+      serialRepuesto: tipo === 'repuesto' ? serialRepuesto.trim() || null : null,
+      componente: (componente || null) as any,
       calidadRepuesto: tipo === 'repuesto' ? calidadRepuesto : null,
       cantidad: tipo !== 'mano_obra' ? cantidad : undefined,
       costoUnitarioBs: tipo === 'mano_obra' ? 0 : costoUnitarioBs || 0,
@@ -981,6 +986,25 @@ const ModalEditarItem: React.FC<ModalEditarItemProps> = ({
                 <option value="Puede esperar">Puede esperar</option>
               </select>
             </div>
+
+            <div>
+              <label className="block font-semibold text-slate-700 mb-1">
+                Componente (para el historial, opcional):
+              </label>
+              <select
+                value={componente}
+                onChange={(e) => setComponente(e.target.value)}
+                className="w-full px-3 py-2 bg-slate-50 rounded-lg border border-slate-300 text-slate-900"
+              >
+                <option value="">— Ninguno —</option>
+                {COMPONENTES.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.texto}
+                  </option>
+                ))}
+                <option value="otro">Otro</option>
+              </select>
+            </div>
           </div>
 
           {/* Checkbox PRECIO POR DEFINIR */}
@@ -1058,6 +1082,13 @@ const ModalEditarItem: React.FC<ModalEditarItemProps> = ({
                         onChange={(e) => setMarcaRepuesto(e.target.value)}
                         placeholder="Bosch, Denso, etc."
                         className="w-full px-2 py-1.5 bg-white rounded border border-slate-300 text-slate-900"
+                      />
+                      <input
+                        type="text"
+                        value={serialRepuesto}
+                        onChange={(e) => setSerialRepuesto(e.target.value)}
+                        placeholder="Serial (opcional)"
+                        className="mt-1 w-full px-2 py-1.5 bg-white rounded border border-slate-300 text-slate-900"
                       />
                     </div>
                     <div>

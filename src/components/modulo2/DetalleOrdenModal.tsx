@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { OrdenServicio, FotoOrden, TallerConfig } from '../../types';
+import { DuenoUsuario, OrdenServicio, FotoOrden, TallerConfig } from '../../types';
+import { PanelCorreccionesOrden, ReemplazarFoto } from '../modulo8/PanelCorreccionesOrden';
 import { DiagramaCarroceria } from './DiagramaCarroceria';
 import { db } from '../../lib/firebase';
 import { collection, onSnapshot } from 'firebase/firestore';
@@ -44,6 +45,7 @@ interface DetalleOrdenModalProps {
   onAbrirCotizacion?: (orden: OrdenServicio) => void;
   onAbrirAprobacion?: (orden: OrdenServicio) => void;
   onAbrirImprimirCotizacion?: (orden: OrdenServicio) => void;
+  usuarioActual?: DuenoUsuario | null;
 }
 
 export const DetalleOrdenModal: React.FC<DetalleOrdenModalProps> = ({
@@ -62,7 +64,9 @@ export const DetalleOrdenModal: React.FC<DetalleOrdenModalProps> = ({
   onAbrirCotizacion,
   onAbrirAprobacion,
   onAbrirImprimirCotizacion,
+  usuarioActual,
 }) => {
+  const [verReemplazadas, setVerReemplazadas] = useState(false);
   const [fotos, setFotos] = useState<FotoOrden[]>([]);
   const [fotoAmpliada, setFotoAmpliada] = useState<FotoOrden | null>(null);
 
@@ -75,7 +79,7 @@ export const DetalleOrdenModal: React.FC<DetalleOrdenModalProps> = ({
     const unsubFotos = onSnapshot(
       collection(db, 'ordenes', orden.id, 'fotos'),
       (snapshot) => {
-        const lista: FotoOrden[] = snapshot.docs.map((d) => d.data() as FotoOrden);
+        const lista: FotoOrden[] = snapshot.docs.map((d) => ({ ...(d.data() as FotoOrden), id: d.id }));
         setFotos(lista);
       },
       (err) => {
@@ -483,8 +487,14 @@ export const DetalleOrdenModal: React.FC<DetalleOrdenModalProps> = ({
             <div className="flex items-center justify-between">
               <h4 className="text-xs sm:text-sm font-bold text-slate-900 flex items-center gap-2">
                 <Camera className="w-4 h-4 text-slate-700" />
-                Fotografías de Recepción y Evidencia ({fotos.length}):
+                Fotografías de Recepción y Evidencia ({fotos.filter((f) => !f.reemplazada).length}):
               </h4>
+              {fotos.some((f) => f.reemplazada) && (
+                <label className="flex items-center gap-1.5 text-[11px] text-slate-600">
+                  <input type="checkbox" checked={verReemplazadas} onChange={(e) => setVerReemplazadas(e.target.checked)} />
+                  Ver reemplazadas
+                </label>
+              )}
             </div>
 
             {fotos.length === 0 ? (
@@ -493,7 +503,7 @@ export const DetalleOrdenModal: React.FC<DetalleOrdenModalProps> = ({
               </div>
             ) : (
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                {fotos.map((f) => (
+                {fotos.filter((f) => verReemplazadas || !f.reemplazada).map((f) => (
                   <div
                     key={f.id}
                     onClick={() => setFotoAmpliada(f)}
@@ -506,6 +516,7 @@ export const DetalleOrdenModal: React.FC<DetalleOrdenModalProps> = ({
                     />
                     <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-slate-950/80 to-transparent p-2 text-white">
                       <span className="text-[10px] font-bold block truncate">
+                        {f.reemplazada ? '[Reemplazada] ' : f.reemplazaFotoId ? '[Corregida] ' : ''}
                         {f.titulo}
                       </span>
                     </div>
@@ -540,6 +551,8 @@ export const DetalleOrdenModal: React.FC<DetalleOrdenModalProps> = ({
               <div>Llaves: <strong>{orden.accesorios.cantidadLlaves}</strong></div>
             </div>
           </div>
+
+          {usuarioActual && <PanelCorreccionesOrden orden={orden} usuarioActual={usuarioActual} />}
         </div>
 
         {/* Modal de foto ampliada */}
@@ -561,8 +574,11 @@ export const DetalleOrdenModal: React.FC<DetalleOrdenModalProps> = ({
               <img
                 src={fotoAmpliada.base64Data}
                 alt={fotoAmpliada.titulo}
-                className="max-h-[75vh] w-auto mx-auto object-contain rounded"
+                className="max-h-[70vh] w-auto mx-auto object-contain rounded"
               />
+              {usuarioActual && (
+                <ReemplazarFoto orden={orden} foto={fotoAmpliada} usuarioActual={usuarioActual} onListo={() => setFotoAmpliada(null)} />
+              )}
             </div>
           </div>
         )}
