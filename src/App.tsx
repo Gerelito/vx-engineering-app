@@ -773,35 +773,6 @@ function TallerAppContent() {
       {/* Contenido Principal */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
         
-        {/* Banner de Guía Informativa */}
-        <div className="bg-white border border-slate-200 rounded-xl p-4 mb-6 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-          <div className="flex items-start gap-3">
-            <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center shrink-0 mt-0.5 border border-emerald-200">
-              <ShieldCheck className="w-5 h-5" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-bold uppercase tracking-wider text-emerald-900 bg-emerald-100 px-2 py-0.5 rounded">
-                  Módulos 1, 2, 3 & 4 Activos · {config.nombre || 'VX Engineering'}
-                </span>
-                <span className="text-sm font-bold text-slate-900">
-                  Recepción, Tablero Kanban, Diagnóstico y Cotizaciones
-                </span>
-              </div>
-              <p className="text-xs text-slate-600 mt-1">
-                Tablero Kanban por estados · Alertas de tiempo · Diagnóstico multipunto · Cotizaciones multiversión · Aprobaciones parciales/totales.
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2 text-xs text-slate-500 self-end md:self-center shrink-0">
-            <div className="text-right">
-              <span className="text-slate-400 block text-[10px]">Dueño autenticado:</span>
-              <span className="font-bold text-slate-800">{usuarioActual.displayName}</span>
-            </div>
-          </div>
-        </div>
-
         {/* Renderizado de la Vista Seleccionada */}
         {vistaActiva === 'recepciones' && (
           <OrdenesList

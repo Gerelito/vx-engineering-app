@@ -109,7 +109,7 @@ export const DiagnosticoImprimibleModal: React.FC<DiagnosticoImprimibleModalProp
 
   return (
     <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/70 backdrop-blur-xs p-2 sm:p-4 overflow-y-auto animate-in fade-in">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full border border-slate-200 overflow-hidden my-6 flex flex-col max-h-[95vh]">
+      <div className="zona-impresion bg-white rounded-2xl shadow-2xl max-w-3xl w-full border border-slate-200 overflow-hidden my-6 flex flex-col max-h-[95vh]">
         {/* Barra superior de herramientas (no imprimible) */}
         <div className="bg-slate-900 text-white px-5 py-3.5 flex items-center justify-between shrink-0 print:hidden">
           <div className="flex items-center gap-2">

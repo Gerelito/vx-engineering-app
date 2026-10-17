@@ -147,7 +147,7 @@ export const ActaEntregaModal: React.FC<Props> = ({ orden, tipo, config, usuario
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-2 sm:p-4 bg-slate-900/60 overflow-y-auto print:static print:bg-white print:p-0">
-      <div className="w-full max-w-3xl bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col my-auto max-h-[96vh] print:max-h-none print:shadow-none print:rounded-none">
+      <div className="zona-impresion w-full max-w-3xl bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col my-auto max-h-[96vh] print:max-h-none print:shadow-none print:rounded-none">
         <div className="px-5 py-4 bg-slate-900 text-white flex items-center justify-between print:hidden">
           <div className="flex items-center gap-3">
             <KeyRound className="w-6 h-6 text-amber-400" />

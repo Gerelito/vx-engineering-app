@@ -26,7 +26,7 @@ export const OrdenImprimibleModal: React.FC<OrdenImprimibleModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-900/60 backdrop-blur-xs overflow-y-auto">
-      <div className="w-full max-w-3xl bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden my-auto">
+      <div className="zona-impresion w-full max-w-3xl bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden my-auto">
         {/* Barra superior de control (no se imprime) */}
         <div className="flex items-center justify-between px-6 py-3.5 bg-slate-900 text-white print:hidden">
           <div className="flex items-center gap-2">

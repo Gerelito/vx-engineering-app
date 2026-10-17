@@ -20,3 +20,48 @@ button, input, select, textarea {
 .tabular-nums {
   font-variant-numeric: tabular-nums;
 }
+
+
+/* Impresión: solo se imprime la hoja abierta (.zona-impresion), sin la app de fondo */
+@media print {
+  @page {
+    size: letter;
+    margin: 12mm;
+  }
+  html,
+  body {
+    background: #fff !important;
+  }
+  body:has(.zona-impresion) header,
+  body:has(.zona-impresion) main,
+  body:has(.zona-impresion) footer,
+  body:has(.zona-impresion) .fixed:not(:has(.zona-impresion)) {
+    display: none !important;
+  }
+  .fixed:has(.zona-impresion) {
+    position: static !important;
+    display: block !important;
+    background: none !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    backdrop-filter: none !important;
+  }
+  .zona-impresion {
+    max-width: none !important;
+    max-height: none !important;
+    margin: 0 !important;
+    overflow: visible !important;
+    box-shadow: none !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+  }
+  .zona-impresion .overflow-y-auto,
+  .zona-impresion [class*='max-h-'] {
+    overflow: visible !important;
+    max-height: none !important;
+  }
+  .zona-impresion * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}
