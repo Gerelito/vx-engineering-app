@@ -72,7 +72,7 @@ export const TransicionEstadoModal: React.FC<TransicionEstadoModalProps> = ({
   const [aprobacionMontoBs, setAprobacionMontoBs] = useState<string>(
     orden.autorizaciones?.montoPreAutorizadoBs
       ? String(orden.autorizaciones.montoPreAutorizadoBs)
-      : '350'
+      : ''
   );
   const [aprobacionNotas, setAprobacionNotas] = useState('');
   const [guardando, setGuardando] = useState(false);

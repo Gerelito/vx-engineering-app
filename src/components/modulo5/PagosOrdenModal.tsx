@@ -284,6 +284,43 @@ export const PagosOrdenModal: React.FC<Props> = ({ orden, config, usuarioActual,
             </div>
           </section>
 
+          {/* Devolución al cliente (saldo a favor, p. ej. anticipo de una orden cancelada) */}
+          {fin.saldoBs !== null && fin.saldoBs < 0 && (
+            <section className="border border-sky-300 bg-sky-50/50 rounded-xl p-4 space-y-2">
+              <h4 className="text-sm font-bold text-sky-950">Devolver al cliente</h4>
+              <p className="text-xs text-sky-900">
+                Saldo a favor del cliente: <b>{formatearMonedaBs(-fin.saldoBs)}</b>. Ingresa arriba los montos devueltos por cada
+                medio y el concepto, y toca este botón.
+              </p>
+              <button
+                type="button"
+                onClick={async () => {
+                  setError(null);
+                  setGuardando(true);
+                  try {
+                    const lista = medios.map((m) => ({ medio: m, montoBs: parseFloat((montos[m] || '').replace(',', '.')) || 0 }));
+                    await registrarPagoFirestore(
+                      orden,
+                      { tipo: 'Devolución', montos: lista, concepto: concepto || 'Devolución al cliente' },
+                      usuarioActual
+                    );
+                    onExito(`Devolución registrada en ${orden.folio}.`);
+                    setMontos({});
+                    setConcepto('');
+                  } catch (e: any) {
+                    setError(e?.message || String(e));
+                  } finally {
+                    setGuardando(false);
+                  }
+                }}
+                disabled={guardando || totalIngresado <= 0}
+                className="px-4 py-2.5 rounded-lg bg-sky-700 disabled:opacity-50 text-white text-sm font-bold"
+              >
+                Registrar devolución de {formatearMonedaBs(totalIngresado)}
+              </button>
+            </section>
+          )}
+
           {/* Entrega con saldo */}
           {fin.saldoBs !== null && fin.saldoBs > 0 && (
             <section className="border border-amber-300 bg-amber-50/50 rounded-xl p-4 space-y-3">
@@ -363,7 +400,7 @@ export const PagosOrdenModal: React.FC<Props> = ({ orden, config, usuarioActual,
                         <div className="flex flex-wrap items-center gap-2 text-sm">
                           <span
                             className={`text-[11px] font-bold px-2 py-0.5 rounded ${
-                              p.tipo === 'Anulación' ? 'bg-rose-100 text-rose-800' : 'bg-slate-100 text-slate-700'
+                              p.tipo === 'Anulación' || p.tipo === 'Devolución' ? 'bg-rose-100 text-rose-800' : 'bg-slate-100 text-slate-700'
                             }`}
                           >
                             {p.tipo}
@@ -383,7 +420,7 @@ export const PagosOrdenModal: React.FC<Props> = ({ orden, config, usuarioActual,
                           </a>
                         )}
                       </div>
-                      {p.tipo !== 'Anulación' && !anulado && (
+                      {p.tipo !== 'Anulación' && p.tipo !== 'Devolución' && !anulado && (
                         <button
                           type="button"
                           onClick={() => {

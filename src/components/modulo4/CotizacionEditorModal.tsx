@@ -123,18 +123,17 @@ export const CotizacionEditorModal: React.FC<CotizacionEditorModalProps> = ({
   const totalCalculado = subtotalCalculado !== null ? Math.max(0, subtotalCalculado - descuentoNum) : null;
 
   // Cálculo interno de costos y márgenes
-  const costoTotalInterno = items.reduce((acc, it) => {
-    const cant = it.cantidad || it.horasManoObra || 1;
-    return acc + (it.costoUnitarioBs || 0) * cant;
-  }, 0);
+  // La mano de obra no tiene costo interno registrado: el margen se mide solo sobre repuestos y terceros.
+  const itemsConCosto = items.filter((it) => it.tipo !== 'mano_obra' && !it.precioPorDefinir);
+  const costoTotalInterno = itemsConCosto.reduce((acc, it) => acc + (it.costoUnitarioBs || 0) * (it.cantidad || 1), 0);
+  const ventaItemsConCosto = itemsConCosto.reduce((acc, it) => acc + (it.precioTotalBs || 0), 0);
   const margenPromedio =
-    subtotalCalculado && subtotalCalculado > 0 && costoTotalInterno > 0
-      ? Math.round(((subtotalCalculado - costoTotalInterno) / subtotalCalculado) * 100)
+    ventaItemsConCosto > 0 && costoTotalInterno > 0
+      ? Math.round(((ventaItemsConCosto - costoTotalInterno) / ventaItemsConCosto) * 100)
       : 0;
   const alertaMargenGeneral =
     !tienePrecioPorDefinir &&
-    subtotalCalculado !== null &&
-    subtotalCalculado > 0 &&
+    costoTotalInterno > 0 &&
     margenPromedio < (config.margenMinimoPorcentaje || 25);
 
   // Importar hallazgos del diagnóstico técnico (Módulo 3)
@@ -161,8 +160,8 @@ export const CotizacionEditorModal: React.FC<CotizacionEditorModalProps> = ({
         origenHallazgoId: h.id,
         horasManoObra: 1,
         tarifaHoraBs: tarifaHora,
-        costoUnitarioBs: 40,
-        margenPorcentaje: 50,
+        costoUnitarioBs: 0,
+        margenPorcentaje: 0,
         precioPorDefinir: costoSugerido === 0,
         precioUnitarioCalculadoBs: costoSugerido > 0 ? costoSugerido : tarifaHora,
         precioTotalBs: costoSugerido > 0 ? costoSugerido : tarifaHora,
@@ -697,8 +696,8 @@ export const CotizacionEditorModal: React.FC<CotizacionEditorModalProps> = ({
 
                 {/* Métricas internas protegidas */}
                 <div className="pt-2 mt-2 border-t border-slate-800 flex items-center justify-between text-[10px] text-slate-400">
-                  <span>Costo Interno Estimado: {formatearMonedaBs(costoTotalInterno)}</span>
-                  <span>Margen Estimado: ~{margenPromedio}%</span>
+                  <span>Costo repuestos/terceros: {formatearMonedaBs(costoTotalInterno)}</span>
+                  <span>{costoTotalInterno > 0 ? `Margen repuestos: ~${margenPromedio}%` : 'Sin costos de repuestos'}</span>
                 </div>
               </div>
             </div>
@@ -811,7 +810,7 @@ const ModalEditarItem: React.FC<ModalEditarItemProps> = ({
     itemInicial?.calidadRepuesto || 'original'
   );
   const [cantidad, setCantidad] = useState<number>(itemInicial?.cantidad || 1);
-  const [costoUnitarioBs, setCostoUnitarioBs] = useState<number>(itemInicial?.costoUnitarioBs || 100);
+  const [costoUnitarioBs, setCostoUnitarioBs] = useState<number>(itemInicial?.costoUnitarioBs ?? 0);
   const [margenPorcentaje, setMargenPorcentaje] = useState<number>(
     itemInicial?.margenPorcentaje || config.margenMinimoPorcentaje || 25
   );
@@ -891,8 +890,8 @@ const ModalEditarItem: React.FC<ModalEditarItemProps> = ({
       marcaRepuesto: tipo === 'repuesto' ? marcaRepuesto.trim() || null : null,
       calidadRepuesto: tipo === 'repuesto' ? calidadRepuesto : null,
       cantidad: tipo !== 'mano_obra' ? cantidad : undefined,
-      costoUnitarioBs: costoUnitarioBs || 0,
-      margenPorcentaje: margenPorcentaje || 0,
+      costoUnitarioBs: tipo === 'mano_obra' ? 0 : costoUnitarioBs || 0,
+      margenPorcentaje: tipo === 'mano_obra' ? 0 : margenPorcentaje || 0,
 
       proveedorTerceros: tipo === 'terceros' ? proveedorTerceros.trim() || null : null,
 

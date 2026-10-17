@@ -10,11 +10,12 @@ import {
   ClipboardList,
   LayoutGrid,
   Wallet,
+  KeyRound,
 } from 'lucide-react';
 
 interface NavbarProps {
-  vistaActiva: 'recepciones' | 'taller' | 'caja' | 'clientes' | 'vehiculos' | 'auditoria';
-  onCambiarVista: (vista: 'recepciones' | 'taller' | 'caja' | 'clientes' | 'vehiculos' | 'auditoria') => void;
+  vistaActiva: 'recepciones' | 'taller' | 'entregas' | 'caja' | 'clientes' | 'vehiculos' | 'auditoria';
+  onCambiarVista: (vista: 'recepciones' | 'taller' | 'entregas' | 'caja' | 'clientes' | 'vehiculos' | 'auditoria') => void;
   onNuevaRecepcion: () => void;
   onNuevoCliente: () => void;
   onNuevoVehiculo: () => void;
@@ -37,7 +38,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   const [modalConfirmarLogout, setModalConfirmarLogout] = useState(false);
 
   const navItems: {
-    id: 'recepciones' | 'taller' | 'caja' | 'clientes' | 'vehiculos' | 'auditoria';
+    id: 'recepciones' | 'taller' | 'entregas' | 'caja' | 'clientes' | 'vehiculos' | 'auditoria';
     label: string;
     icon: React.ReactNode;
   }[] = [
@@ -50,6 +51,11 @@ export const Navbar: React.FC<NavbarProps> = ({
       id: 'taller',
       label: 'Taller (Kanban)',
       icon: <Wrench className="w-4 h-4 text-blue-500 shrink-0" />,
+    },
+    {
+      id: 'entregas',
+      label: 'Entregas',
+      icon: <KeyRound className="w-4 h-4 text-amber-600 shrink-0" />,
     },
     {
       id: 'caja',

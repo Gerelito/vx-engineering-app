@@ -141,7 +141,16 @@ export type TipoFotoRecepcion =
   | 'vin_chasis'
   | 'orden_firmada'
   | 'diagnostico'
-  | 'adicional';
+  | 'adicional'
+  | 'final'
+  | 'piezas_retiradas'
+  | 'salida_frente'
+  | 'salida_trasera'
+  | 'salida_lateral_izq'
+  | 'salida_lateral_der'
+  | 'salida_tablero'
+  | 'rearmado'
+  | 'acta_firmada';
 
 export interface FotoOrden {
   id: string;
@@ -403,6 +412,14 @@ export interface OrdenServicio {
   entregaConSaldo?: AutorizacionEntregaConSaldo | null;
   fechaEntrega?: string | null;
 
+  // Módulo 6: control de calidad, aviso, entrega y cancelación
+  controlesCalidad?: ControlCalidad[];
+  retrabajos?: number;
+  listoDesde?: string | null;
+  avisoCliente?: AvisoCliente | null;
+  actaEntrega?: ActaEntrega | null;
+  cancelacion?: CancelacionOrden | null;
+
   // Metadatos
   creadoPorUid: string;
   creadoPorEmail: string;
@@ -658,7 +675,7 @@ export interface PlantillaCotizacion {
 // MÓDULO 5: CAJA Y PAGOS
 // -------------------------------------------------------------
 
-export type TipoPago = 'Anticipo' | 'Abono' | 'Pago final' | 'Anulación';
+export type TipoPago = 'Anticipo' | 'Abono' | 'Pago final' | 'Anulación' | 'Devolución';
 
 export interface MontoPorMedio {
   medio: string; // 'QR', 'Efectivo' u otro configurado
@@ -758,4 +775,86 @@ export interface CierreCaja {
   fechaCierreLocal?: string | null;
   reaperturas?: { fecha: string; motivo: string; usuarioNombre: string; usuarioEmail: string }[];
   auditoriaId: string;
+}
+
+// -------------------------------------------------------------
+// MÓDULO 6: ENTREGA Y CANCELACIÓN
+// -------------------------------------------------------------
+
+export interface PruebaRuta {
+  realizada: boolean;
+  kmInicial?: number | null;
+  kmFinal?: number | null;
+  recorrido?: string | null;
+  observaciones?: string | null;
+  resultado?: 'Satisfactoria' | 'Con observaciones' | 'No satisfactoria' | null;
+}
+
+export interface ControlCalidad {
+  id: string;
+  fecha: string;
+  revisor: string;
+  revisionPropia: boolean;
+  trabajosConfirmados: { descripcion: string; ok: boolean }[];
+  checklist: Record<string, boolean>;
+  pruebaRuta: PruebaRuta;
+  resultado: 'Aprobado' | 'Rechazado';
+  motivoRechazo?: string | null;
+  fotosIds?: string[];
+  registradoPorNombre: string;
+}
+
+export interface AvisoCliente {
+  fecha: string;
+  medio: 'WhatsApp' | 'Llamada' | 'Mensaje' | 'En persona';
+  resultado: string;
+  registradoPorNombre: string;
+}
+
+export interface ActaEntrega {
+  tipo: 'entrega' | 'devolucion';
+  fecha: string;
+  kmSalida: number;
+  quienRetira: { nombre: string; documento: string; relacion: string };
+  llavesDevueltas: number;
+  objetosDevueltos: Record<string, boolean>;
+  piezasRetiradasEntregadas?: boolean | null;
+  trabajosRealizados: string[];
+  recomendacionesNoAprobadas: string[];
+  almacenajeDias: number;
+  almacenajeBs: number;
+  totalBs: number | null;
+  pagadoBs: number;
+  saldoAlEntregarBs: number | null;
+  observaciones?: string | null;
+  fotosSalidaIds?: string[];
+  firmaSubida: boolean;
+  firmaFotoId?: string | null;
+  registradoPorNombre: string;
+}
+
+export type MotivoCancelacion =
+  | 'El cliente rechazó la cotización'
+  | 'El cliente no contestó'
+  | 'Se llevó el auto a otro taller'
+  | 'El repuesto no existe o es muy caro'
+  | 'El taller no puede hacer el trabajo'
+  | 'Otro';
+
+export interface CancelacionOrden {
+  estado: 'abierta' | 'cerrada';
+  motivo: MotivoCancelacion;
+  nota?: string | null;
+  fecha: string;
+  registradoPorNombre: string;
+  registradoPorEmail: string;
+  vehiculoDesarmado: boolean;
+  rearmado?: { completado: boolean; fecha?: string | null; notas?: string | null; fotosIds?: string[] } | null;
+  cobrarDiagnostico: boolean;
+  montoDiagnosticoBs: number;
+  repuestosLiberados: boolean; // inventario es fase 2; queda registrado
+  seguimientoFecha?: string | null; // aaaa-mm-dd (cancelación + 30 días)
+  seguimientoRealizado?: boolean;
+  seguimientoNota?: string | null;
+  fechaCierre?: string | null;
 }

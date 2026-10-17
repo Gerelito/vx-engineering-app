@@ -70,6 +70,10 @@ import {
 } from './types';
 import { db } from './lib/firebase';
 import { CajaView } from './components/modulo5/CajaView';
+import { EntregasView } from './components/modulo6/EntregasView';
+import { ControlCalidadModal } from './components/modulo6/ControlCalidadModal';
+import { ActaEntregaModal } from './components/modulo6/ActaEntregaModal';
+import { CancelacionModal } from './components/modulo6/CancelacionModal';
 import { PagosOrdenModal } from './components/modulo5/PagosOrdenModal';
 import { collection, doc, onSnapshot, onSnapshotsInSync } from 'firebase/firestore';
 import { CheckCircle2, ShieldCheck, AlertCircle, X, Loader2, ClipboardList, Wrench } from 'lucide-react';
@@ -85,7 +89,7 @@ function TallerAppContent() {
   const [config, setConfig] = useState<TallerConfig>(DEFAULT_CONFIG);
 
   // Estados de navegación
-  const [vistaActiva, setVistaActiva] = useState<'recepciones' | 'taller' | 'caja' | 'clientes' | 'vehiculos' | 'auditoria'>('taller');
+  const [vistaActiva, setVistaActiva] = useState<'recepciones' | 'taller' | 'entregas' | 'caja' | 'clientes' | 'vehiculos' | 'auditoria'>('taller');
 
   // Estado del indicador de nube (verde = sincronizado; amarillo = pendiente offline; rojo = error de permisos; rosa = error al guardar)
   const [estadoNube, setEstadoNube] = useState<'sincronizado' | 'pendiente_offline' | 'error_permisos' | 'error_guardar'>('sincronizado');
@@ -140,6 +144,28 @@ function TallerAppContent() {
 
   // Módulo 5: Caja y pagos (se guarda el id para mostrar siempre la orden actualizada en vivo)
   const [ordenPagosId, setOrdenPagosId] = useState<string | null>(null);
+  // Módulo 6: se guardan ids para que el modal siempre vea la orden en vivo
+  const [ordenControlCalidadId, setOrdenControlCalidadId] = useState<string | null>(null);
+  const [actaAbierta, setActaAbierta] = useState<{ id: string; tipo: 'entrega' | 'devolucion' } | null>(null);
+  const [ordenCancelacionId, setOrdenCancelacionId] = useState<string | null>(null);
+
+  /** Los cambios a estos estados tienen su propio flujo (Módulo 6). Devuelve true si desvió. */
+  const desviarFlujoEntrega = (orden: OrdenServicio, nuevoEstado: EstadoOrden | null | undefined): boolean => {
+    if (!nuevoEstado) return false;
+    if (orden.estado === 'Control de calidad' && (nuevoEstado === 'Listo para entrega' || nuevoEstado === 'En reparación')) {
+      setOrdenControlCalidadId(orden.id);
+      return true;
+    }
+    if (nuevoEstado === 'Entregado') {
+      setActaAbierta({ id: orden.id, tipo: 'entrega' });
+      return true;
+    }
+    if (nuevoEstado === 'Cancelada') {
+      setOrdenCancelacionId(orden.id);
+      return true;
+    }
+    return false;
+  };
 
   // Preselección para asistente de recepción (Módulo 2 revisión 1)
   const [recepcionClienteId, setRecepcionClienteId] = useState<string | undefined>(undefined);
@@ -519,6 +545,7 @@ function TallerAppContent() {
     nuevoEstado: EstadoOrden
   ) => {
     if (!usuarioActual) return;
+    if (desviarFlujoEntrega(orden, nuevoEstado)) return;
     try {
       await actualizarEstadoOrdenFirestore(orden, nuevoEstado, usuarioActual);
       mostrarNotificacion(`Estado de orden ${orden.folio} actualizado a: ${nuevoEstado}`);
@@ -537,6 +564,11 @@ function TallerAppContent() {
     }
   ) => {
     if (!usuarioActual) return;
+    if (desviarFlujoEntrega(orden, nuevoEstado)) {
+      setOrdenParaTransicion(null);
+      setTransicionObjetivo(null);
+      return;
+    }
     try {
       if (opciones?.aprobacionRegistrada) {
         await registrarAprobacionClienteFirestore(orden, opciones.aprobacionRegistrada, usuarioActual);
@@ -797,6 +829,7 @@ function TallerAppContent() {
             ordenes={ordenes}
             config={config}
             onAbrirTransicionEstado={(ord, nuevoEst) => {
+              if (desviarFlujoEntrega(ord, nuevoEst)) return;
               setOrdenParaTransicion(ord);
               setTransicionObjetivo(nuevoEst || null);
             }}
@@ -829,6 +862,19 @@ function TallerAppContent() {
               setModalRecepcionAbierto(true);
             }}
             onAsignarBahiaYResponsable={handleAsignarBahiaYResponsable}
+          />
+        )}
+
+        {vistaActiva === 'entregas' && usuarioActual && (
+          <EntregasView
+            ordenes={ordenes}
+            config={config}
+            usuarioActual={usuarioActual}
+            onAbrirControlCalidad={(ord) => setOrdenControlCalidadId(ord.id)}
+            onAbrirActa={(ord, tipo) => setActaAbierta({ id: ord.id, tipo })}
+            onAbrirPagos={(ord) => setOrdenPagosId(ord.id)}
+            onAbrirDetalle={(ord) => setOrdenDetalle(ord)}
+            onExito={(m) => mostrarNotificacion(m)}
           />
         )}
 
@@ -1079,37 +1125,45 @@ function TallerAppContent() {
       />
 
       {/* MODALES DEL MÓDULO 3: TALLER */}
-      <TransicionEstadoModal
-        orden={ordenParaTransicion}
-        nuevoEstadoObjetivo={transicionObjetivo}
-        isOpen={ordenParaTransicion !== null}
-        onClose={() => {
-          setOrdenParaTransicion(null);
-          setTransicionObjetivo(null);
-        }}
-        config={config}
-        onConfirmarTransicion={handleConfirmarTransicionEstado}
-      />
+      {ordenParaTransicion && (
+        <TransicionEstadoModal
+          orden={ordenParaTransicion}
+          nuevoEstadoObjetivo={transicionObjetivo}
+          isOpen={ordenParaTransicion !== null}
+          onClose={() => {
+            setOrdenParaTransicion(null);
+            setTransicionObjetivo(null);
+          }}
+          config={config}
+          onConfirmarTransicion={handleConfirmarTransicionEstado}
+        />
+      )}
 
-      <TareasCronometroModal
-        orden={ordenParaTareas}
-        isOpen={ordenParaTareas !== null}
-        onClose={() => setOrdenParaTareas(null)}
-        config={config}
-        onGuardarTarea={handleGuardarTarea}
-        onControlCronometro={handleControlCronometro}
-      />
+      {ordenParaTareas && (
+        <TareasCronometroModal
+          orden={ordenParaTareas}
+          isOpen={ordenParaTareas !== null}
+          onClose={() => setOrdenParaTareas(null)}
+          config={config}
+          onGuardarTarea={handleGuardarTarea}
+          onControlCronometro={handleControlCronometro}
+        />
 
-      <DiagnosticoTecnicoModal
-        orden={ordenParaDiagnostico}
-        isOpen={ordenParaDiagnostico !== null}
-        onClose={() => setOrdenParaDiagnostico(null)}
-        config={config}
-        usuarioActual={usuarioActual}
-        onGuardarDiagnostico={handleGuardarDiagnostico}
-        onSubirFotoDiagnostico={handleSubirFotoDiagnostico}
-        onAbrirImprimirDiagnostico={(ord) => setOrdenDiagnosticoImprimir(ord)}
-      />
+      )}
+
+      {ordenParaDiagnostico && (
+        <DiagnosticoTecnicoModal
+          orden={ordenParaDiagnostico}
+          isOpen={ordenParaDiagnostico !== null}
+          onClose={() => setOrdenParaDiagnostico(null)}
+          config={config}
+          usuarioActual={usuarioActual}
+          onGuardarDiagnostico={handleGuardarDiagnostico}
+          onSubirFotoDiagnostico={handleSubirFotoDiagnostico}
+          onAbrirImprimirDiagnostico={(ord) => setOrdenDiagnosticoImprimir(ord)}
+        />
+
+      )}
 
       <DiagnosticoImprimibleModal
         orden={ordenDiagnosticoImprimir}
@@ -1118,14 +1172,17 @@ function TallerAppContent() {
         onClose={() => setOrdenDiagnosticoImprimir(null)}
       />
 
-      <TrabajoAdicionalModal
-        orden={ordenParaTrabajoAdicional}
-        isOpen={ordenParaTrabajoAdicional !== null}
-        onClose={() => setOrdenParaTrabajoAdicional(null)}
-        config={config}
-        usuarioActual={usuarioActual}
-        onRegistrarTrabajoAdicional={handleRegistrarTrabajoAdicional}
-      />
+      {ordenParaTrabajoAdicional && (
+        <TrabajoAdicionalModal
+          orden={ordenParaTrabajoAdicional}
+          isOpen={ordenParaTrabajoAdicional !== null}
+          onClose={() => setOrdenParaTrabajoAdicional(null)}
+          config={config}
+          usuarioActual={usuarioActual}
+          onRegistrarTrabajoAdicional={handleRegistrarTrabajoAdicional}
+        />
+
+      )}
 
       {/* MODALES DEL MÓDULO 4: COTIZACIONES, APROBACIONES Y VISTA IMPRIMIBLE */}
       {usuarioActual && (
@@ -1182,6 +1239,36 @@ function TallerAppContent() {
       )}
 
       {/* Diálogo Propio de la Aplicación (sin window.confirm / alert) */}
+      {/* MODALES DEL MÓDULO 6: ENTREGA Y CANCELACIÓN */}
+      {ordenControlCalidadId && usuarioActual && ordenes.find((o) => o.id === ordenControlCalidadId) && (
+        <ControlCalidadModal
+          orden={ordenes.find((o) => o.id === ordenControlCalidadId)!}
+          config={config}
+          usuarioActual={usuarioActual}
+          onClose={() => setOrdenControlCalidadId(null)}
+          onExito={(m) => mostrarNotificacion(m)}
+        />
+      )}
+      {actaAbierta && usuarioActual && ordenes.find((o) => o.id === actaAbierta.id) && (
+        <ActaEntregaModal
+          orden={ordenes.find((o) => o.id === actaAbierta.id)!}
+          tipo={actaAbierta.tipo}
+          config={config}
+          usuarioActual={usuarioActual}
+          onClose={() => setActaAbierta(null)}
+          onAbrirPagos={(ord) => setOrdenPagosId(ord.id)}
+          onExito={(m) => mostrarNotificacion(m)}
+        />
+      )}
+      {ordenCancelacionId && usuarioActual && ordenes.find((o) => o.id === ordenCancelacionId) && (
+        <CancelacionModal
+          orden={ordenes.find((o) => o.id === ordenCancelacionId)!}
+          usuarioActual={usuarioActual}
+          onClose={() => setOrdenCancelacionId(null)}
+          onExito={(m) => mostrarNotificacion(m)}
+        />
+      )}
+
       {ordenPagosId && usuarioActual && (
         <PagosOrdenModal
           orden={ordenes.find((o) => o.id === ordenPagosId) || null}

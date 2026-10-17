@@ -141,7 +141,7 @@ function datosUsuario(dueno: DuenoUsuario) {
   };
 }
 
-function escribirAuditoria(
+export function escribirAuditoria(
   w: Transaction | WriteBatch,
   dueno: DuenoUsuario,
   datos: {
@@ -193,6 +193,7 @@ async function verificarCajaAbierta(tx: Transaction, dia: string) {
 }
 
 export interface NuevoPagoInput {
+  /** 'Devolución' registra dinero devuelto al cliente (se guarda en negativo). */
   tipo: Exclude<TipoPago, 'Anulación'>;
   montos: MontoPorMedio[];
   concepto: string;
@@ -208,12 +209,14 @@ export async function registrarPagoFirestore(
   if (!navigator.onLine) {
     throw new Error('Registrar pagos requiere conexión a internet.');
   }
-  const montos = input.montos
+  const esDevolucion = input.tipo === 'Devolución';
+  const positivos = input.montos
     .map((m) => ({ medio: m.medio, montoBs: redondearBs(Number(m.montoBs) || 0) }))
     .filter((m) => m.montoBs !== 0);
-  if (montos.some((m) => m.montoBs < 0)) throw new Error('Los montos no pueden ser negativos.');
+  if (positivos.some((m) => m.montoBs < 0)) throw new Error('Los montos no pueden ser negativos.');
+  const montos = esDevolucion ? positivos.map((m) => ({ ...m, montoBs: -m.montoBs })) : positivos;
   const totalBs = redondearBs(montos.reduce((s, m) => s + m.montoBs, 0));
-  if (totalBs <= 0) throw new Error('Ingresa al menos un monto mayor a cero.');
+  if (totalBs === 0) throw new Error('Ingresa al menos un monto mayor a cero.');
   if (!input.concepto.trim()) throw new Error('El concepto es obligatorio.');
 
   const dia = diaLaPaz();
@@ -227,10 +230,17 @@ export async function registrarPagoFirestore(
     await verificarCajaAbierta(tx, dia);
     const ordenActual = { ...(ordenSnap.data() as OrdenServicio), id: orden.id };
     const finanzasAntes = calcularFinanzasOrden(ordenActual);
+    if (esDevolucion) {
+      const aFavor = finanzasAntes.saldoBs !== null ? -finanzasAntes.saldoBs : finanzasAntes.totalPagadoBs;
+      if (-totalBs > aFavor + 0.001) {
+        throw new Error(`La devolución supera el monto a favor del cliente (${aFavor.toFixed(2)} Bs).`);
+      }
+    }
 
     const auditPagoId = escribirAuditoria(tx, dueno, {
       modulo: 'Caja y Pagos',
-      accion: 'Pago registrado',
+      accion: esDevolucion ? 'Devolución al cliente' : 'Pago registrado',
+      sensible: esDevolucion,
       entidad: 'pagos',
       entidadId: pagoRef.id,
       antes: null,
@@ -249,7 +259,7 @@ export async function registrarPagoFirestore(
       totalBs,
       concepto: input.concepto.trim(),
       comprobanteBase64: input.comprobanteBase64 || null,
-      aCuenta: finanzasAntes.estadoTotal !== 'aprobado',
+      aCuenta: !esDevolucion && finanzasAntes.estadoTotal !== 'aprobado',
       anulaPagoId: null,
       motivoAnulacion: null,
       fechaDia: dia,
@@ -263,8 +273,10 @@ export async function registrarPagoFirestore(
     tx.set(pagoRef, limpiarUndefined(pago));
 
     const resumen = sumarAlResumen(ordenActual.pagos, montos);
-    resumen.ultimoPagoFecha = ahoraIso;
-    resumen.ultimoPagoMontoBs = totalBs;
+    if (!esDevolucion) {
+      resumen.ultimoPagoFecha = ahoraIso;
+      resumen.ultimoPagoMontoBs = totalBs;
+    }
 
     const auditOrdenId = escribirAuditoria(tx, dueno, {
       modulo: 'Caja y Pagos',
